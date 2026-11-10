@@ -67,6 +67,10 @@
   .back { display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 12px; border: 0; border-radius: 10px;
           background: var(--glass); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; text-shadow: none; cursor: pointer; }
   [hidden] { display: none !important; }
+  .langrow { margin-top: 14px; display: flex; align-items: center; gap: 8px; font-size: 12px; text-shadow: none; }
+  .lang { border: 0; background: none; padding: 6px 0; color: var(--ink-3); font: inherit; cursor: pointer; }
+  .lang[aria-pressed="true"] { color: var(--ink); font-weight: 600; cursor: default; }
+  .langsep { color: var(--ink-3); opacity: .6; }
   .date { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
   .clockrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin: 6px 0 12px; }
   .clocks { display: flex; gap: 18px; }
@@ -105,8 +109,31 @@
   .arrow:disabled { opacity: .35; }
   .arrow:focus-visible, .back:focus-visible, a:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
   /* Unsplash kräver kreditering; hålls så diskret som möjligt. */
-  .credit { font-size: 9px; color: rgba(255,255,255,.28); margin-top: 10px; min-height: 11px; text-shadow: none; letter-spacing: .02em; text-align: right; }
+  /* Unsplash kräver kreditering: diskret, uppe till höger i höjd med pilarna. */
+  .credit { position: fixed; z-index: 3; top: calc(max(16px, env(safe-area-inset-top, 0px)) + 11px);
+            right: max(18px, env(safe-area-inset-right, 0px)); max-width: calc(100vw - 270px); text-align: right;
+            font-size: 9px; line-height: 1.35; color: rgba(255,255,255,.32); text-shadow: none; letter-spacing: .02em; }
   .credit a { text-decoration: none; }
+  .credit .own { display: inline-flex; gap: 6px; }
+  .credit button { border: 0; background: var(--glass); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600;
+                   padding: 5px 10px; border-radius: 9px; cursor: pointer; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .credit.has-own { top: max(16px, env(safe-area-inset-top, 0px)); max-width: none; }
+  .sheet { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center;
+           background: rgba(0,0,0,.55); padding: 16px; padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
+  .sheet-box { width: 100%; max-width: 420px; background: #1f1b18; border-radius: 18px; padding: 20px; display: grid; gap: 12px; text-shadow: none; }
+  .sheet-box h2 { margin: 0; font-size: 18px; }
+  .sheet-box p { margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.4; }
+  .sheet-box input[type=password], .sheet-box input[type=text] { width: 100%; font: inherit; font-size: 17px; padding: 12px 14px; border-radius: 12px;
+           border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--ink); }
+  .sheet-row { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn { border: 0; font: inherit; font-size: 15px; font-weight: 600; padding: 11px 16px; border-radius: 12px; cursor: pointer;
+         background: var(--chip); color: var(--ink); display: inline-flex; align-items: center; }
+  .btn.primary { background: var(--accent); color: #1a0d06; }
+  .btn.danger { background: #c8442f; color: #fff; }
+  .sheet-err { color: #ff9a85 !important; }
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(24px, env(safe-area-inset-bottom, 0px)); z-index: 15;
+           background: rgba(20,17,15,.85); padding: 10px 16px; border-radius: 12px; font-size: 14px; text-shadow: none;
+           -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
   .state { margin-top: auto; }
   .state h1 { font-size: 34px; }
   @media (prefers-reduced-motion: reduce) { .bgimg { transition: none; } }
@@ -210,6 +237,98 @@ const TRAVEL = {
   39: ["Färja", "Koh Phi Phi → Phuket", 45, "phiphi", "phuket"],
 };
 
+// ---------- språk ----------
+// Telefonens språk avgör första gången, sedan gäller valet (knappen SV/EN).
+const LANG_KEY = "resan-sprak";
+let L = (() => {
+  try { const v = localStorage.getItem(LANG_KEY); if (v === "sv" || v === "en") return v; } catch (e) {}
+  return /^sv|^nb|^no|^da/i.test(navigator.language || "") ? "sv" : "en";
+})();
+const DAYS_EN = {
+  1: ["Arrival in Hanoi", "Land, check in, meet the guide. Welcome dinner with the group."],
+  2: ["Hanoi City Tour", "Guided walk: egg coffee, Hoan Kiem Lake, Train Street and bia hoi."],
+  3: ["To Sapa", "Early bus to Sapa. Trek to Sin Chai (Black H'mong). Homestay in Y Linh Ho."],
+  4: ["Trekking in Sapa", "Trek via Lao Chai to Ta Van (Zay people), rice fields in the Muong Hoa valley. Homestay in Ta Van."],
+  5: ["Village Life", "Trek to Giang Ta Chai (Red Dao). Bus back to Hanoi in the evening."],
+  6: ["Ha Long Bay", "Bus at 07:30 to Tuan Chau. Cruise, Surprising Cave, Titop Island, sunset party. Night on the boat."],
+  7: ["Ha Long & onwards", "Caves or kayaking in the morning. Bus to Ninh Binh, arriving afternoon or evening."],
+  8: ["Ninh Binh", "Sampan ride through the rice fields, Trang An (UNESCO) and Hoa Lu temple."],
+  9: ["Mua Cave + night train", "Hike up to the Mua Cave viewpoint. Night train to Hue at 20:30."],
+  10: ["Hello Hue!", "The Imperial City and the Citadel. Cooking class by Thien Mu Pagoda in the evening."],
+  11: ["Motorbike tour", "On the back of a motorbike over the Hai Van Pass, about 5 h. Arrive in Hoi An around 16:00."],
+  12: ["Hoi An City Tour", "Old town, the Japanese Bridge, crafts and food on your own."],
+  13: ["Free day in Hoi An", "Free day, maybe An Bang beach. Night train from Da Nang in the evening."],
+  14: ["Nha Trang", "Arrive in the morning. City tour: Ponagar temple, market, beaches."],
+  15: ["Free day", "Free day: beach, VinPearl or Ninh Van Bay."],
+  16: ["Free day", "Free day: beach, VinPearl or Ninh Van Bay."],
+  17: ["Last day in Nha Trang", "Free day. Night train to Ho Chi Minh City in the evening."],
+  18: ["Hello Ho Chi Minh!", "Half-day trip to the Cu Chi tunnels. The guide finishes today."],
+  19: ["Free day (no guide)", "Free day in HCMC: District 1, Thao Dien."],
+  20: ["Free day (no guide)", "Last full day in Vietnam."],
+  21: ["Flight to Bangkok", "Fly to Bangkok. A new guide meets the group."],
+  22: ["The best of Bangkok", "Longtail boat on the Chao Phraya and the Grand Palace."],
+  23: ["Street food", "Free day. Food walk in Chinatown in the evening."],
+  24: ["Night bus", "Free day in Bangkok. Night bus to Mae Sot around 18:00."],
+  25: ["Mae Sot → Umphang", "Long winding road through the mountains. Homestay with a Karen family in Palatha."],
+  26: ["Elephants", "Jungle trek with Asian elephants and their mahouts. Weaving demonstration in the village."],
+  27: ["Jungle camping", "Boat trip, Thi Lor Su waterfall. Camping by Ko Tha waterfall."],
+  28: ["Back to Mae Sot", "Trek back to Palatha, then a long drive to Mae Sot."],
+  29: ["Hello Chiang Mai!", "Bus to Chiang Mai, arriving in the afternoon."],
+  30: ["Bike tour", "Morning bike tour of the old town, night market."],
+  31: ["Thai cooking", "Cooking class with a market visit."],
+  32: ["Flight to Khao Sok", "Domestic flight to Surat Thani, then on to Khao Sok. Evening safari."],
+  33: ["Cheow Lan Lake", "Boat trip, swimming, kayaking. Night in a floating bamboo bungalow."],
+  34: ["To Krabi", "Morning safari, then to Krabi. The guide finishes, the rest is on your own."],
+  35: ["Free day in Krabi", "Free day."],
+  36: ["Koh Phi Phi", "Ferry to Phi Phi. Beach and snorkelling."],
+  37: ["Koh Phi Phi", "Beach and snorkelling."],
+  38: ["Koh Phi Phi", "Beach and snorkelling."],
+  39: ["Phuket", "Ferry to Phuket. Free days."],
+  40: ["Phuket", "Free days."],
+  41: ["Last day", "Last day, heading home."],
+};
+const MODE_EN = { "Buss": "Bus", "Nattåg": "Night train", "Motorcykel": "Motorbike", "Flyg": "Flight", "Nattbuss": "Night bus", "Bil": "Car", "Flyg + buss": "Flight + bus", "Färja": "Ferry" };
+const WX_EN = { "Klart": "Clear", "Lätt molnigt": "Partly cloudy", "Mulet": "Overcast", "Dimma": "Fog", "Duggregn": "Drizzle", "Regn": "Rain", "Snö": "Snow", "Regnskurar": "Showers", "Åska": "Thunderstorm" };
+const STR = {
+  sv: {
+    day: "Dag", today: "Idag", sweden: "Sverige", approx: "ca", photo: "Photo credit", ownPhoto: "Egen bild", del: "Ta bort",
+    loadingWx: "Hämtar väder…", noWx: "Ingen prognos än", prev: "Föregående dag", next: "Nästa dag", add: "Lägg till bilder för den här dagen",
+    pick: "Välj dag", nextPhoto: "Nästa bild",
+    back: (d) => `Tillbakablick · ${d} dag${d === 1 ? "" : "ar"} sedan`, ahead: (d) => `Framåtblick · ${d} dag${d === 1 ? "" : "ar"} kvar`,
+    before: (d) => `${d} ${d === 1 ? "dag" : "dagar"} kvar`, beforeText: "Resan börjar 4 november.", after: "Hemma igen", afterText: "Resan tog slut 14 december.",
+    wxAria: (l, t) => `Väder: ${l}, ${t} grader. Öppnar prognosen på yr.no`, tripAria: (m, r, km) => `${m} ${r}, ca ${km} km. Öppnar rutten i Google Maps`,
+    addTitle: "Lägg till bilder", addText: "Skriv ditt namn och resans kod. Namnet visas på bilderna du lägger upp. Båda sparas på den här telefonen, så du behöver bara göra det en gång.",
+    yourName: "Ditt namn", code: "Resans kod", cancel: "Avbryt", go: "Fortsätt", wrongCode: "Fel kod. Fråga Pontus.", noServer: "Kunde inte nå servern. Försök igen.",
+    thanks: (n) => `Tack, ${n}`, whereTo: (d, ds) => `Bilderna hamnar på dag ${d}, ${ds}.`, later: "Senare", choose: "Välj bilder",
+    uploading: (i, n) => `Laddar upp ${i} av ${n} …`, codeGone: "Koden gäller inte längre. Tryck på + och skriv in den igen.",
+    upDone: (k, d) => `${k === 1 ? "Bilden" : k + " bilder"} tillagd${k === 1 ? "" : "a"} på dag ${d}.`, upSome: (k, f) => `${k} uppladdade, ${f} gick inte att ladda upp.`,
+    delTitle: "Ta bort bilden?", delText: (d) => `Den försvinner från dag ${d} för alla. Pontus kan återställa den om det blev fel.`,
+    delWrong: "Fel kod. Tryck på + och skriv in den igen.", delNotYours: "Du kan bara ta bort dina egna bilder.", delFail: "Kunde inte ta bort bilden.", delDone: "Bilden är borttagen.",
+  },
+  en: {
+    day: "Day", today: "Today", sweden: "Sweden", approx: "about", photo: "Photo credit", ownPhoto: "Own photo", del: "Delete",
+    loadingWx: "Loading weather…", noWx: "No forecast yet", prev: "Previous day", next: "Next day", add: "Add photos to this day",
+    pick: "Choose day", nextPhoto: "Next photo",
+    back: (d) => `Looking back · ${d} day${d === 1 ? "" : "s"} ago`, ahead: (d) => `Looking ahead · ${d} day${d === 1 ? "" : "s"} to go`,
+    before: (d) => `${d} ${d === 1 ? "day" : "days"} to go`, beforeText: "The trip starts on 4 November.", after: "Home again", afterText: "The trip ended on 14 December.",
+    wxAria: (l, t) => `Weather: ${l}, ${t} degrees. Opens the forecast on yr.no`, tripAria: (m, r, km) => `${m} ${r}, about ${km} km. Opens the route in Google Maps`,
+    addTitle: "Add photos", addText: "Enter your name and the trip code. Your name is shown on the photos you add. Both are saved on this phone, so you only need to do this once.",
+    yourName: "Your name", code: "Trip code", cancel: "Cancel", go: "Continue", wrongCode: "Wrong code. Ask Pontus.", noServer: "Couldn't reach the server. Try again.",
+    thanks: (n) => `Thanks, ${n}`, whereTo: (d, ds) => `Your photos go on day ${d}, ${ds}.`, later: "Later", choose: "Choose photos",
+    uploading: (i, n) => `Uploading ${i} of ${n} …`, codeGone: "The code no longer works. Tap + and enter it again.",
+    upDone: (k, d) => `${k === 1 ? "Photo" : k + " photos"} added to day ${d}.`, upSome: (k, f) => `${k} uploaded, ${f} couldn't be uploaded.`,
+    delTitle: "Delete this photo?", delText: (d) => `It disappears from day ${d} for everyone. Pontus can restore it if it was a mistake.`,
+    delWrong: "Wrong code. Tap + and enter it again.", delNotYours: "You can only delete your own photos.", delFail: "Couldn't delete the photo.", delDone: "Photo deleted.",
+  },
+};
+const T = (k, ...a) => { const v = STR[L][k]; return typeof v === "function" ? v(...a) : v; };
+const dayTitle = (n) => L === "en" ? DAYS_EN[n][0] : DAYS[n][2];
+const dayText = (n) => L === "en" ? DAYS_EN[n][1] : DAYS[n][3];
+const modeName = (m) => L === "en" ? (MODE_EN[m] || m) : m;
+const wxName = (w) => L === "en" ? (WX_EN[w] || w) : w;
+const country = (n) => n <= 20 ? "Vietnam" : "Thailand";
+document.documentElement.lang = L;
+
 // ---------- väderikoner ----------
 const WX = (c, night) => {
   if (c === 0) return [night ? "moon" : "sun", "Klart"];
@@ -256,9 +375,11 @@ const todayNumber = () => {
 };
 const dateOf = (n) => new Date(START + (n - 1) * 86400000);
 const isoDate = (n) => dateOf(n).toISOString().slice(0, 10);
-const WEEKDAYS = ["sön", "mån", "tis", "ons", "tors", "fre", "lör"];
-const MONTHS = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
-const dateStr = (n) => { const d = dateOf(n); return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`; };
+const WEEKDAYS_SV = ["sön", "mån", "tis", "ons", "tors", "fre", "lör"];
+const MONTHS_SV = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const dateStr = (n) => { const d = dateOf(n); const W = L === "en" ? WEEKDAYS_EN : WEEKDAYS_SV, M = L === "en" ? MONTHS_EN : MONTHS_SV; return `${W[d.getUTCDay()]} ${d.getUTCDate()} ${M[d.getUTCMonth()]}`; };
 const hhmm = (d, utc) => utc
   ? String(d.getUTCHours()).padStart(2, "0") + ":" + String(d.getUTCMinutes()).padStart(2, "0")
   : String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
@@ -279,7 +400,8 @@ const lsGet = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch
 const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 
 // ---------- state ----------
-const state = { view: null, viewAt: 0, weather: {}, photo: {}, noPhoto: {} };
+const state = { view: null, viewAt: 0, weather: {}, photo: {}, noPhoto: {}, own: {}, ownIdx: 0 };
+let api = false; // true när api.php svarar (på Inleed, inte på GitHub Pages)
 
 // ---------- väder ----------
 const wxCache = {};
@@ -383,7 +505,7 @@ async function loadPhoto(n, wcode) {
 async function loadDay(n) {
   const w = await loadWeather(n);
   if (n === currentDay()) render();
-  loadPhoto(n, codeFrom(w));
+  if (!(state.own[n] || []).length) loadPhoto(n, codeFrom(w));
 }
 
 // ---------- bakgrund med övertoning ----------
@@ -418,15 +540,16 @@ const app = document.getElementById("app");
 
 function weatherHtml(w, isToday, loc) {
   const href = `https://www.yr.no/en/forecast/daily-table/${LOC[loc].join(",")}`;
-  if (!w) return `<a class="wx" href="${href}" target="_blank" rel="noopener"><div class="wxsub">Hämtar väder…</div></a>`;
-  if (w.unavailable || !w.daily) return `<a class="wx" href="${href}" target="_blank" rel="noopener"><div class="wxsub">Ingen prognos än</div></a>`;
+  if (!w) return `<a class="wx" href="${href}" target="_blank" rel="noopener"><div class="wxsub">${T("loadingWx")}</div></a>`;
+  if (w.unavailable || !w.daily) return `<a class="wx" href="${href}" target="_blank" rel="noopener"><div class="wxsub">${T("noWx")}</div></a>`;
   const d = w.daily;
   const code = isToday && w.current ? w.current.weather_code : d.weather_code[0];
   const night = isToday && w.current ? w.current.is_day === 0 : false;
-  const [icon, label] = WX(code, night);
+  const [icon, label0] = WX(code, night);
+  const label = wxName(label0);
   const max = Math.round(d.temperature_2m_max[0]), min = Math.round(d.temperature_2m_min[0]);
   const big = isToday && w.current ? Math.round(w.current.temperature_2m) : max;
-  return `<a class="wx" href="${href}" target="_blank" rel="noopener" aria-label="Väder: ${label}, ${big} grader. Öppnar prognosen på yr.no">
+  return `<a class="wx" href="${href}" target="_blank" rel="noopener" aria-label="${T("wxAria", label, big)}">
     <div>${wxIcon(icon)}<span class="wxtemp">${big}°</span></div>
     <div class="wxsub">${label} · ${min}°/${max}°</div></a>`;
 }
@@ -440,12 +563,13 @@ function buildShell() {
   app.innerHTML = `
     <div class="head">
       <span class="arrows">
-            <button class="arrow" id="prev" type="button" aria-label="Föregående dag"><svg width="14" height="14" viewBox="0 0 10 10" aria-hidden="true"><path d="M6.5 1.5 3 5l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-            <button class="arrow" id="next" type="button" aria-label="Nästa dag"><svg width="14" height="14" viewBox="0 0 10 10" aria-hidden="true"><path d="M3.5 1.5 7 5 3.5 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <button class="back" id="back" type="button" hidden>Idag ${BACK_ICON}</button>
+            <button class="arrow" id="prev" type="button" aria-label="${T("prev")}"><svg width="14" height="14" viewBox="0 0 10 10" aria-hidden="true"><path d="M6.5 1.5 3 5l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="arrow" id="next" type="button" aria-label="${T("next")}"><svg width="14" height="14" viewBox="0 0 10 10" aria-hidden="true"><path d="M3.5 1.5 7 5 3.5 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="arrow" id="add" type="button" hidden aria-label="${T("add")}"><svg width="14" height="14" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v9M1.5 6h9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
+        <button class="back" id="back" type="button" hidden>${T("today")} ${BACK_ICON}</button>
       </span>
       <div class="scrub">
-        <div class="timeline" id="timeline" role="slider" tabindex="0" aria-label="Välj dag" aria-valuemin="1" aria-valuemax="${TOTAL}">
+        <div class="timeline" id="timeline" role="slider" tabindex="0" aria-label="${T("pick")}" aria-valuemin="1" aria-valuemax="${TOTAL}">
           <div class="track"></div>
           <div class="fill" id="fill"></div>
           <div id="dots"></div>
@@ -457,6 +581,10 @@ function buildShell() {
     <div class="panel">
       <div id="content"></div>
       <div class="credit" id="credit"></div>
+      <div class="langrow" role="group" aria-label="Språk / Language">
+        <button class="lang" type="button" data-lang="sv" lang="sv" aria-pressed="${L === "sv"}">Svenska</button><span class="langsep" aria-hidden="true">|</span><button class="lang" type="button" data-lang="en" lang="en" aria-pressed="${L === "en"}">English</button>
+      </div>
+      <input type="file" id="file" accept="image/*" multiple hidden>
     </div>`;
   document.getElementById("prev").addEventListener("click", () => setView(currentDay() - 1, true));
   document.getElementById("next").addEventListener("click", () => setView(currentDay() + 1, true));
@@ -501,25 +629,29 @@ function render() {
     shell = false;
     app.innerHTML = today < 1
       ? `<div class="head"><span class="brand">Vietnam – Thailand</span></div>
-         <div class="state"><h1>${1 - today} ${1 - today === 1 ? "dag" : "dagar"} kvar</h1><p class="text">Resan börjar 4 november.</p></div>`
+         <div class="state"><h1>${T("before", 1 - today)}</h1><p class="text">${T("beforeText")}</p></div>`
       : `<div class="head"><span class="brand">Vietnam – Thailand</span></div>
-         <div class="state"><h1>Hemma igen</h1><p class="text">Resan tog slut 14 december.</p></div>`;
+         <div class="state"><h1>${T("after")}</h1><p class="text">${T("afterText")}</p></div>`;
     return;
   }
   if (!shell) buildShell();
   const todayC = clampDay(today);
   const n = currentDay();
   const isToday = n === today;
-  const [place, loc, title, text] = DAYS[n];
-  const photo = state.photo[n];
-  if (photo) setBackground(photo.img);
+  const [place, loc] = DAYS[n];
+  const title = dayTitle(n), text = dayText(n);
+  const own = state.own[n] || [];
+  const ownI = own.length ? (Math.floor(Date.now() / (ROTATE_MIN * 60000)) + state.ownIdx) % own.length : 0;
+  const photo = own.length ? null : state.photo[n];
+  if (own.length) setBackground(own[ownI].url);
+  else if (photo) setBackground(photo.img);
   else if (state.noPhoto[n]) clearBackground();
   const t = TRAVEL[n];
   const tripHtml = t ? (() => {
     const tm = /buss|bil|motorcykel/i.test(t[0]) ? "driving" : /tåg/i.test(t[0]) ? "transit" : "";
     const href = `https://www.google.com/maps/dir/?api=1&origin=${LOC[t[3]].join(",")}&destination=${LOC[t[4]].join(",")}${tm ? "&travelmode=" + tm : ""}`;
-    return `<a class="trip" href="${href}" target="_blank" rel="noopener" aria-label="${esc(t[0])} ${esc(t[1])}, ca ${t[2]} km. Öppnar rutten i Google Maps">
-      <span class="trip-top">${esc(t[0])} <b>ca ${t[2].toLocaleString("sv-SE")} km</b></span>
+    return `<a class="trip" href="${href}" target="_blank" rel="noopener" aria-label="${esc(T("tripAria", modeName(t[0]), t[1], t[2]))}">
+      <span class="trip-top">${esc(modeName(t[0]))} <b>${T("approx")} ${t[2].toLocaleString(L === "en" ? "en-GB" : "sv-SE")} km</b></span>
       <span class="trip-route">${esc(t[1])}<span class="ext">↗</span></span></a>`;
   })() : "";
   const diff = Math.abs(n - today);
@@ -527,14 +659,14 @@ function render() {
 
   document.getElementById("where").innerHTML = `
     <a class="place" href="https://www.google.com/maps/search/?api=1&query=${LOC[t ? t[4] : loc].join(",")}" target="_blank" rel="noopener">${esc(place)}<span class="ext">↗</span></a>
-    <span class="day">Dag ${n} / ${TOTAL}</span>`;
+    <span class="day">${T("day")} ${n} / ${TOTAL}</span>`;
   document.getElementById("content").innerHTML = `
-    ${isToday ? "" : `<div class="viewing"><span>${n < today ? "Tillbakablick" : "Framåtblick"} · ${diff} dag${diff === 1 ? "" : "ar"} ${n < today ? "sedan" : "kvar"}</span></div>`}
+    ${isToday ? "" : `<div class="viewing"><span>${n < today ? T("back", diff) : T("ahead", diff)}</span></div>`}
     <div class="date">${dateStr(n)}</div>
     <div class="clockrow">
       <div class="clocks">
-        <div><div class="clocklabel">${n <= 20 ? "Vietnam" : "Thailand"}</div><div class="clock">${hhmm(miraNow(), true)}</div></div>
-        <div><div class="clocklabel">Sverige</div><div class="clock">${sweTime()}</div></div>
+        <div><div class="clocklabel">${country(n)}</div><div class="clock">${hhmm(miraNow(), true)}</div></div>
+        <div><div class="clocklabel">${T("sweden")}</div><div class="clock">${sweTime()}</div></div>
       </div>
       ${weatherHtml(state.weather[n], isToday, loc)}
     </div>
@@ -542,8 +674,12 @@ function render() {
     <h1>${esc(title)}</h1>
     <p class="text">${esc(text)}</p>
     ${tripHtml}`;
-  document.getElementById("credit").innerHTML = photo
-    ? `Foto: <a href="${esc((photo.profile || "https://unsplash.com") + ut)}" target="_blank" rel="noopener">${esc(photo.name)}</a> / <a href="https://unsplash.com/?utm_source=vietnam_thailand&utm_medium=referral" target="_blank" rel="noopener">Unsplash</a>`
+  const credit = document.getElementById("credit");
+  credit.classList.toggle("has-own", own.length > 0);
+  credit.innerHTML = own.length
+    ? `<span class="own"><button type="button" id="ownNext" aria-label="${T("nextPhoto")}">${esc(own[ownI].by || T("ownPhoto"))}${own.length > 1 ? ` · ${ownI + 1}/${own.length}` : ""}</button>${own[ownI].mine ? `<button type="button" id="ownDel" data-file="${esc(own[ownI].file)}">${T("del")}</button>` : ""}</span>`
+    : photo
+    ? `${T("photo")}: <a href="${esc((photo.profile || "https://unsplash.com") + ut)}" target="_blank" rel="noopener">${esc(photo.name)}</a> / <a href="https://unsplash.com/?utm_source=vietnam_thailand&utm_medium=referral" target="_blank" rel="noopener">Unsplash</a>`
     : "";
 
   // Tidslinjen uppdateras på plats.
@@ -554,12 +690,171 @@ function render() {
   document.getElementById("thumb").style.left = at(n);
   const tl = document.getElementById("timeline");
   tl.setAttribute("aria-valuenow", n);
-  tl.setAttribute("aria-valuetext", `Dag ${n}, ${dateStr(n)}, ${place}`);
+  tl.setAttribute("aria-valuetext", `${T("day")} ${n}, ${dateStr(n)}, ${place}`);
   fitPlace();
   document.getElementById("prev").disabled = n <= 1;
   document.getElementById("next").disabled = n >= TOTAL;
   document.getElementById("back").hidden = isToday;
+  document.getElementById("add").hidden = !api;
 }
+
+// ---------- egna bilder (api.php på Inleed) ----------
+const CODE_KEY = "resan-kod";
+// Telefonens egen hemliga nyckel: bara den som laddat upp en bild kan ta bort den.
+const OWNER_KEY = "resan-agare";
+const ownerToken = (() => {
+  let t = ""; try { t = localStorage.getItem(OWNER_KEY) || ""; } catch (e) {}
+  if (!/^[a-f0-9]{32}$/.test(t)) {
+    const b = new Uint8Array(16); crypto.getRandomValues(b);
+    t = [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+    try { localStorage.setItem(OWNER_KEY, t); } catch (e) {}
+  }
+  return t;
+})();
+const apiFetch = (action, body) => fetch(`api.php?action=${action}`, {
+  method: body ? "POST" : "GET", body, cache: "no-store", headers: { "X-Resan-Owner": ownerToken },
+});
+const NAME_KEY = "resan-namn";
+const getName = () => { try { return localStorage.getItem(NAME_KEY) || ""; } catch (e) { return ""; } };
+const setName = (n) => { try { localStorage.setItem(NAME_KEY, n); } catch (e) {} };
+const getCode = () => { try { return localStorage.getItem(CODE_KEY) || ""; } catch (e) { return ""; } };
+const setCode = (c) => { try { c ? localStorage.setItem(CODE_KEY, c) : localStorage.removeItem(CODE_KEY); } catch (e) {} };
+
+async function loadOwn() {
+  try {
+    const res = await apiFetch("list");
+    const j = await res.json();
+    if (!res.ok || !j.days) return;
+    api = true;
+    state.own = j.days;
+    render();
+  } catch (e) { /* ingen server (t.ex. GitHub Pages) – funktionen syns inte */ }
+}
+
+let toastTimer;
+function toast(msg, ms) {
+  let t = document.querySelector(".toast");
+  if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+  t.textContent = msg;
+  clearTimeout(toastTimer);
+  if (ms) toastTimer = setTimeout(() => t.remove(), ms);
+}
+
+function sheet(html) {
+  closeSheet();
+  const el = document.createElement("div");
+  el.className = "sheet";
+  el.id = "sheet";
+  el.innerHTML = `<div class="sheet-box" role="dialog" aria-modal="true">${html}</div>`;
+  el.addEventListener("click", (e) => { if (e.target === el || e.target.closest("[data-close]")) closeSheet(); });
+  document.body.appendChild(el);
+  return el;
+}
+const closeSheet = () => { const el = document.getElementById("sheet"); if (el) el.remove(); };
+
+// Första gången: koden. Sedan väljs bilder via en etikett (en riktig tryckning, krävs av iPhone).
+function askCode() {
+  const el = sheet(`<h2>${T("addTitle")}</h2>
+    <p>${T("addText")}</p>
+    <form id="codeForm" style="display:grid;gap:12px">
+      <input type="text" id="nameInput" autocomplete="given-name" placeholder="${T("yourName")}" aria-label="${T("yourName")}" maxlength="40" required value="${esc(getName())}">
+      <input type="password" id="codeInput" autocomplete="current-password" placeholder="${T("code")}" aria-label="${T("code")}" required value="${esc(getCode())}">
+      <p class="sheet-err" id="codeErr" hidden></p>
+      <div class="sheet-row"><button type="button" class="btn" data-close>${T("cancel")}</button><button class="btn primary" id="codeOk">${T("go")}</button></div>
+    </form>`);
+  el.querySelector(getName() ? "#codeInput" : "#nameInput").focus();
+  el.querySelector("#codeForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const code = el.querySelector("#codeInput").value.trim();
+    const err = el.querySelector("#codeErr");
+    const fd = new FormData(); fd.append("code", code);
+    const res = await apiFetch("check", fd).catch(() => null);
+    if (!res || !res.ok) { err.textContent = res && res.status === 403 ? T("wrongCode") : T("noServer"); err.hidden = false; return; }
+    setCode(code);
+    setName(el.querySelector("#nameInput").value.trim());
+    el.querySelector(".sheet-box").innerHTML = `<h2>${T("thanks", esc(getName()))}</h2>
+      <p>${T("whereTo", currentDay(), dateStr(currentDay()))}</p>
+      <div class="sheet-row"><button type="button" class="btn" data-close>${T("later")}</button><label class="btn primary" for="file">${T("choose")}</label></div>`;
+  });
+}
+
+// Skala ner i telefonen före uppladdning (snabbt även på mobildata). Servern skalar och rensar igen.
+async function shrink(file) {
+  let img;
+  try { img = await createImageBitmap(file); }
+  catch (e) {
+    img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = URL.createObjectURL(file); });
+  }
+  const w = img.width, h = img.height, k = Math.min(1, 1600 / Math.max(w, h));
+  const c = document.createElement("canvas");
+  c.width = Math.round(w * k); c.height = Math.round(h * k);
+  c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  return new Promise((ok) => c.toBlob(ok, "image/jpeg", 0.85));
+}
+
+async function uploadFiles(files) {
+  const day = currentDay();
+  let done = 0, failed = 0;
+  for (const f of files) {
+    toast(T("uploading", done + failed + 1, files.length));
+    try {
+      const blob = await shrink(f);
+      const fd = new FormData();
+      fd.append("code", getCode()); fd.append("day", String(day)); fd.append("name", getName()); fd.append("photo", blob, "bild.jpg");
+      const res = await apiFetch("upload", fd);
+      if (res.status === 403) { setCode(""); toast(T("codeGone"), 5000); return; }
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "fel");
+      done++;
+    } catch (e) { failed++; }
+  }
+  state.ownIdx = 0;
+  await loadOwn();
+  toast(failed ? T("upSome", done, failed) : T("upDone", done, day), 4000);
+}
+
+function askDelete(file) {
+  const el = sheet(`<h2>${T("delTitle")}</h2>
+    <p>${T("delText", currentDay())}</p>
+    <div class="sheet-row"><button type="button" class="btn" data-close>${T("cancel")}</button><button type="button" class="btn danger" id="delOk">${T("del")}</button></div>`);
+  el.querySelector("#delOk").addEventListener("click", async () => {
+    const fd = new FormData(); fd.append("code", getCode()); fd.append("file", file);
+    const res = await apiFetch("delete", fd).catch(() => null);
+    closeSheet();
+    if (res && res.status === 403) {
+      const j = await res.json().catch(() => ({}));
+      if (/kod/i.test(j.error || "")) { setCode(""); toast(T("delWrong"), 4000); }
+      else toast(T("delNotYours"), 4000);
+      return;
+    }
+    if (!res || !res.ok) { toast(T("delFail"), 4000); return; }
+    state.ownIdx = 0;
+    await loadOwn();
+    if (!(state.own[currentDay()] || []).length) loadDay(currentDay());
+    toast(T("delDone"), 3000);
+  });
+}
+
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#add")) { if (getCode() && getName()) document.getElementById("file").click(); else askCode(); }
+  if (e.target.closest("#ownNext")) { state.ownIdx++; render(); }
+  const lb = e.target.closest(".lang");
+  if (lb && lb.dataset.lang !== L) {
+    L = lb.dataset.lang;
+    try { localStorage.setItem(LANG_KEY, L); } catch (err) {}
+    document.documentElement.lang = L;
+    shell = false;
+    render();
+  }
+  const del = e.target.closest("#ownDel");
+  if (del) { if (getCode()) askDelete(del.dataset.file); else askCode(); }
+});
+document.addEventListener("change", (e) => {
+  if (e.target.id !== "file") return;
+  const files = [...e.target.files];
+  e.target.value = "";
+  closeSheet();
+  if (files.length) uploadFiles(files);
+});
 
 // Ortnamnet ska alltid rymmas på en rad: krymp från 36 px tills det får plats.
 function fitPlace() {
@@ -610,6 +905,8 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) tick
 setInterval(tick, 30 * 1000);
 render();
 loadDay(currentDay());
+loadOwn();
+setInterval(() => { if (api && !document.hidden) loadOwn(); }, 2 * 60 * 1000);
 </script>
 </body>
 </html>

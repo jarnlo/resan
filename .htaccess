@@ -1,0 +1,8 @@
+# Konfigurationen, metadata och git ska aldrig gå att hämta.
+<FilesMatch "^(config\.php|config\.sample\.php|meta\.php)$">
+  Require all denied
+</FilesMatch>
+RedirectMatch 404 /\.git
+<IfModule mod_headers.c>
+  Header set X-Robots-Tag "noindex, nofollow"
+</IfModule>
