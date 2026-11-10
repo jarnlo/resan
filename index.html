@@ -73,8 +73,20 @@
   .footrow { margin-top: 26px; display: flex; align-items: center; gap: 12px; }
   .upload { border: 0; font: inherit; font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 10px; cursor: pointer;
             background: var(--glass); color: var(--ink); text-shadow: none; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .minelink { border: 0; background: none; padding: 8px 0; font: inherit; font-size: 13px; color: var(--ink-2); cursor: pointer; text-shadow: none;
+              text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255,255,255,.3); }
+  .sheet-box.tall { max-height: 80dvh; grid-template-rows: auto 1fr; }
+  .mine-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .mine-list { overflow-y: auto; display: grid; gap: 18px; padding-right: 2px; }
+  .mine-day h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .mine-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .mine-item { margin: 0; display: grid; gap: 6px; }
+  .mine-go { border: 0; padding: 0; background: none; cursor: pointer; border-radius: 10px; overflow: hidden; aspect-ratio: 1; }
+  .mine-go img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mine-del { border: 0; background: var(--chip); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600; padding: 7px 0; border-radius: 9px; cursor: pointer; }
+  .mine-del.confirm { background: #c8442f; color: #fff; }
   .langrow { margin-left: auto; display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-size: 12px; text-shadow: none; }
-  .lang { border: 0; background: none; padding: 6px 0; color: var(--ink-3); font: inherit; cursor: pointer; }
+  .lang { border: 0; background: none; padding: 6px 2px; color: var(--ink-3); font: inherit; letter-spacing: .06em; cursor: pointer; }
   .lang[aria-pressed="true"] { color: var(--ink); font-weight: 600; cursor: default; }
   .langsep { color: var(--ink-3); opacity: .6; }
   .date { font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--ink); }
@@ -305,7 +317,7 @@ const STR = {
     uploading: (i, n) => `Laddar upp ${i} av ${n} …`, codeGone: "Koden gäller inte längre. Be Pontus om en ny länk.",
     upDone: (k, d) => `${k === 1 ? "Bilden" : k + " bilder"} tillagd${k === 1 ? "" : "a"} på dag ${d}.`, upSome: (k, f) => `${k} uppladdade, ${f} gick inte att ladda upp.`,
     delTitle: "Ta bort bilden?", delText: (d) => `Den försvinner från dag ${d} för alla. Pontus kan återställa den om det blev fel.`,
-    delWrong: "Fel kod. Tryck på + och skriv in den igen.", delNotYours: "Du kan bara ta bort dina egna bilder.", delFail: "Kunde inte ta bort bilden.", delDone: "Bilden är borttagen.",
+    delWrong: "Fel kod. Tryck på + och skriv in den igen.", delNotYours: "Du kan bara ta bort dina egna bilder.", delFail: "Kunde inte ta bort bilden.", delDone: "Bilden är borttagen.", mine: "Mina foton", mineEmpty: "Du har inte laddat upp några foton än.", close: "Stäng", sure: "Säker?",
   },
   en: {
     day: "Day", today: "Today", sweden: "Sweden", approx: "about", photo: "Photo credit", ownPhoto: "Own photo", del: "Delete photo",
@@ -321,7 +333,7 @@ const STR = {
     uploading: (i, n) => `Uploading ${i} of ${n} …`, codeGone: "The code no longer works. Ask Pontus for a new link.",
     upDone: (k, d) => `${k === 1 ? "Photo" : k + " photos"} added to day ${d}.`, upSome: (k, f) => `${k} uploaded, ${f} couldn't be uploaded.`,
     delTitle: "Delete this photo?", delText: (d) => `It disappears from day ${d} for everyone. Pontus can restore it if it was a mistake.`,
-    delWrong: "Wrong code. Tap + and enter it again.", delNotYours: "You can only delete your own photos.", delFail: "Couldn't delete the photo.", delDone: "Photo deleted.",
+    delWrong: "Wrong code. Tap + and enter it again.", delNotYours: "You can only delete your own photos.", delFail: "Couldn't delete the photo.", delDone: "Photo deleted.", mine: "My photos", mineEmpty: "You haven't uploaded any photos yet.", close: "Close", sure: "Sure?",
   },
 };
 const T = (k, ...a) => { const v = STR[L][k]; return typeof v === "function" ? v(...a) : v; };
@@ -586,8 +598,9 @@ function buildShell() {
       <div class="credit" id="credit"></div>
       <div class="footrow">
       <button class="upload" id="upload" type="button" hidden>${T("upload")}</button>
+      <button class="minelink" id="mine" type="button" hidden></button>
       <div class="langrow" role="group" aria-label="Språk / Language">
-        <button class="lang" type="button" data-lang="sv" lang="sv" aria-pressed="${L === "sv"}">Svenska</button><span class="langsep" aria-hidden="true">|</span><button class="lang" type="button" data-lang="en" lang="en" aria-pressed="${L === "en"}">English</button>
+        <button class="lang" type="button" data-lang="sv" lang="sv" aria-label="Svenska" aria-pressed="${L === "sv"}">SV</button><span class="langsep" aria-hidden="true">|</span><button class="lang" type="button" data-lang="en" lang="en" aria-label="English" aria-pressed="${L === "en"}">EN</button>
       </div>
       </div>
       <input type="file" id="file" accept="image/*" multiple hidden>
@@ -700,6 +713,10 @@ function render() {
   document.getElementById("next").disabled = n >= TOTAL;
   document.getElementById("back").hidden = isToday;
   document.getElementById("upload").hidden = !(api && codeOk);
+  const nMine = myPhotos().reduce((t, [, l]) => t + l.length, 0);
+  const mineBtn = document.getElementById("mine");
+  mineBtn.hidden = !(api && codeOk && nMine);
+  mineBtn.textContent = `${T("mine")} (${nMine})`;
 }
 
 // ---------- egna bilder (api.php på Inleed) ----------
@@ -825,27 +842,72 @@ async function uploadFiles(files) {
   toast(failed ? T("upSome", done, failed) : T("upDone", done, day), 4000);
 }
 
+// Tar bort en egen bild. Returnerar true om det gick.
+async function deleteFile(file) {
+  const fd = new FormData(); fd.append("code", getCode()); fd.append("file", file);
+  const res = await apiFetch("delete", fd).catch(() => null);
+  if (res && res.status === 403) {
+    const j = await res.json().catch(() => ({}));
+    if (/kod/i.test(j.error || "")) { setCode(""); codeOk = false; closeSheet(); render(); toast(T("codeGone"), 4000); }
+    else toast(T("delNotYours"), 4000);
+    return false;
+  }
+  if (!res || !res.ok) { toast(T("delFail"), 4000); return false; }
+  state.ownIdx = 0;
+  await loadOwn();
+  if (!(state.own[currentDay()] || []).length) loadDay(currentDay());
+  return true;
+}
+
 function askDelete(file) {
   const el = sheet(`<h2>${T("delTitle")}</h2>
     <p>${T("delText", currentDay())}</p>
     <div class="sheet-row"><button type="button" class="btn" data-close>${T("cancel")}</button><button type="button" class="btn danger" id="delOk">${T("del")}</button></div>`);
   el.querySelector("#delOk").addEventListener("click", async () => {
-    const fd = new FormData(); fd.append("code", getCode()); fd.append("file", file);
-    const res = await apiFetch("delete", fd).catch(() => null);
     closeSheet();
-    if (res && res.status === 403) {
-      const j = await res.json().catch(() => ({}));
-      if (/kod/i.test(j.error || "")) { setCode(""); codeOk = false; render(); toast(T("codeGone"), 4000); }
-      else toast(T("delNotYours"), 4000);
-      return;
-    }
-    if (!res || !res.ok) { toast(T("delFail"), 4000); return; }
-    state.ownIdx = 0;
-    await loadOwn();
-    if (!(state.own[currentDay()] || []).length) loadDay(currentDay());
-    toast(T("delDone"), 3000);
+    if (await deleteFile(file)) toast(T("delDone"), 3000);
   });
 }
+
+// "Mina foton": egna bilder per dag. Tryck på en bild = gå till dagen. "Ta bort" frågar "Säker?" på plats.
+const myPhotos = () => Object.entries(state.own)
+  .map(([d, list]) => [Number(d), list.filter((o) => o.mine)])
+  .filter(([, list]) => list.length)
+  .sort((a, b) => a[0] - b[0]);
+
+function openMine() {
+  const groups = myPhotos();
+  const html = groups.length ? groups.map(([d, list]) => `
+      <section class="mine-day">
+        <h3>${T("day")} ${d} · ${dateStr(d)} · ${esc(DAYS[d][0])}</h3>
+        <div class="mine-grid">${list.map((o) => `
+          <figure class="mine-item">
+            <button type="button" class="mine-go" data-day="${d}" aria-label="${T("day")} ${d}"><img src="${esc(o.url)}" alt="" loading="lazy"></button>
+            <button type="button" class="mine-del" data-file="${esc(o.file)}">${T("del")}</button>
+          </figure>`).join("")}
+        </div>
+      </section>`).join("") : `<p>${T("mineEmpty")}</p>`;
+  const el = sheet(`<div class="mine-head"><h2>${T("mine")}</h2><button type="button" class="btn" data-close>${T("close")}</button></div>
+    <div class="mine-list">${html}</div>`);
+  el.querySelector(".sheet-box").classList.add("tall");
+}
+
+document.addEventListener("click", async (e) => {
+  if (e.target.closest("#mine")) { openMine(); return; }
+  const go = e.target.closest(".mine-go");
+  if (go) { closeSheet(); setView(Number(go.dataset.day), true); return; }
+  const md = e.target.closest(".mine-del");
+  if (md) {
+    if (!md.classList.contains("confirm")) {
+      document.querySelectorAll(".mine-del.confirm").forEach((b) => { b.classList.remove("confirm"); b.textContent = T("del"); });
+      md.classList.add("confirm"); md.textContent = T("sure");
+      return;
+    }
+    md.disabled = true;
+    if (await deleteFile(md.dataset.file)) { toast(T("delDone"), 2500); if (document.getElementById("sheet")) openMine(); }
+    else md.disabled = false;
+  }
+});
 
 document.addEventListener("click", (e) => {
   if (e.target.closest("#upload")) { if (getName()) document.getElementById("file").click(); else askName(); }
