@@ -58,7 +58,7 @@
   .where .day { font-size: 14px; text-transform: uppercase; letter-spacing: .14em; font-weight: 800; color: var(--ink); }
   .brand { font-size: 12px; text-transform: uppercase; letter-spacing: .16em; font-weight: 800; white-space: nowrap; padding-top: 6px; }
   .brand .day { color: var(--accent); letter-spacing: .08em; }
-  .place { font-size: 36px; font-weight: 700; line-height: 1.05; letter-spacing: -.01em; min-width: 0; text-wrap: balance; }
+  .place { display: block; max-width: 100%; font-size: 36px; font-weight: 700; line-height: 1.05; letter-spacing: -.01em; white-space: nowrap; }
   .ext { font-size: 13px; font-weight: 400; opacity: .55; margin-left: 2px; }
 
   .panel { margin-top: auto; min-height: 0; overflow-y: auto; scrollbar-width: none; }
@@ -79,10 +79,11 @@
   .sep { height: 1px; background: var(--line); margin: 4px 0 18px; }
   h1 { font-size: 30px; line-height: 1.15; margin: 0 0 10px; font-weight: 700; text-wrap: balance; }
   .text { font-size: 18px; line-height: 1.45; margin: 0; color: rgba(255,255,255,.92); }
-  .trip { display: inline-flex; align-items: center; gap: 6px; margin-top: 18px; padding: 10px 14px; border-radius: 14px;
-          background: var(--chip); font-size: 15px; color: var(--ink-2); text-shadow: none; }
-  .trip { flex-wrap: wrap; row-gap: 2px; }
-  .trip b { color: var(--ink); font-weight: 600; white-space: nowrap; }
+  .trip { display: inline-flex; flex-direction: column; gap: 3px; margin-top: 18px; padding: 10px 14px; border-radius: 14px;
+          background: var(--chip); color: var(--ink); text-shadow: none; max-width: 100%; }
+  .trip-top { display: flex; align-items: baseline; gap: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-2); }
+  .trip-top b { color: var(--ink); font-weight: 700; letter-spacing: .04em; }
+  .trip-route { font-size: 15px; font-weight: 600; }
 
   .scrub { width: 100%; margin: -6px 0 -4px; }
   .timeline { position: relative; height: 30px; touch-action: none; }
@@ -516,7 +517,9 @@ function render() {
   const tripHtml = t ? (() => {
     const tm = /buss|bil|motorcykel/i.test(t[0]) ? "driving" : /tåg/i.test(t[0]) ? "transit" : "";
     const href = `https://www.google.com/maps/dir/?api=1&origin=${LOC[t[3]].join(",")}&destination=${LOC[t[4]].join(",")}${tm ? "&travelmode=" + tm : ""}`;
-    return `<a class="trip" href="${href}" target="_blank" rel="noopener"><span>${esc(t[0])} ${esc(t[1])} ·</span> <b>ca ${t[2].toLocaleString("sv-SE")} km<span class="ext">↗</span></b></a>`;
+    return `<a class="trip" href="${href}" target="_blank" rel="noopener" aria-label="${esc(t[0])} ${esc(t[1])}, ca ${t[2]} km. Öppnar rutten i Google Maps">
+      <span class="trip-top">${esc(t[0])} <b>ca ${t[2].toLocaleString("sv-SE")} km</b></span>
+      <span class="trip-route">${esc(t[1])}<span class="ext">↗</span></span></a>`;
   })() : "";
   const diff = Math.abs(n - today);
   const ut = photo && photo.profile ? "?utm_source=vietnam_thailand&utm_medium=referral" : "";
@@ -551,10 +554,23 @@ function render() {
   const tl = document.getElementById("timeline");
   tl.setAttribute("aria-valuenow", n);
   tl.setAttribute("aria-valuetext", `Dag ${n}, ${dateStr(n)}, ${place}`);
+  fitPlace();
   document.getElementById("prev").disabled = n <= 1;
   document.getElementById("next").disabled = n >= TOTAL;
   document.getElementById("back").hidden = isToday;
 }
+
+// Ortnamnet ska alltid rymmas på en rad: krymp från 36 px tills det får plats.
+function fitPlace() {
+  const el = document.querySelector(".where .place");
+  const box = document.getElementById("where");
+  if (!el || !box) return;
+  const max = app.clientWidth - parseFloat(getComputedStyle(app).paddingLeft) - parseFloat(getComputedStyle(app).paddingRight);
+  let size = 36;
+  el.style.fontSize = size + "px";
+  while (el.scrollWidth > max && size > 16) { size -= 1; el.style.fontSize = size + "px"; }
+}
+addEventListener("resize", fitPlace);
 
 function setView(m, load) {
   m = clampDay(m);
