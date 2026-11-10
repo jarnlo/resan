@@ -390,7 +390,8 @@ function setBackground(img) {
   const el = document.createElement("img");
   el.className = "bgimg";
   el.alt = "";
-  el.onload = () => requestAnimationFrame(() => el.classList.add("in"));
+  // Ingen requestAnimationFrame: den pausas i bakgrundsflikar. En reflow räcker för att övergången ska starta.
+  el.onload = () => { void el.offsetWidth; el.classList.add("in"); };
   el.src = img;
   host.replaceChildren(el);
 }
