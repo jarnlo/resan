@@ -2,3 +2,5 @@ config.php
 uploads/*.jpg
 uploads/borttagna/
 meta.php
+resan-inleed.zip
+.claude/
