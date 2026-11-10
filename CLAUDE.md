@@ -38,6 +38,8 @@ Inbäddad (`embedded`) skickar sidan `postMessage({resanOpen: url})` för länka
 - Språk: SV | EN nere till höger (kort för att rymmas vid 360 px), sparas i `resan-sprak`. Texter i `STR`, `DAYS_EN`, `MODE_EN`, `WX_EN`.
 - iPhone-hemskärmsapp (black-translucent statusrad) får skärmhöjd minus statusraden → tomt band nedtill. `fixHeight()` mäter
   `screen.height - innerHeight` och lägger skillnaden i `--gap`, som läggs på html/body, main och bildlagren. 0 i vanlig webbläsare.
+- Jämn luft: `--pad` 18 px runt hela fönstret (`--pad-top/-bottom/-left/-right`, statusrad/hemindikator går före). Tidslinjen är indragen
+  6 px (prickens radie) så att pricken linjerar med knapparna och marginalen.
 - Exakt en skärm hög, ingen scroll. Svep åt sidan byter dag. Snäpper tillbaka till idag efter 2 min.
 
 ## Viktigt
