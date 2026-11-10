@@ -54,7 +54,10 @@
     max-width: 560px; margin: 0 auto;
   }
   .head { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
-  .where { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; max-width: 100%; }
+  /* Platta bakom ort + dag så att texten syns mot ljus himmel. Negativ marginal = texten står kvar i vänsterkanten. */
+  .where { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0;
+           max-width: calc(100% + 24px); margin-left: -12px; padding: 10px 12px 11px; border-radius: 14px;
+           background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
   .where .day { font-size: 14px; text-transform: uppercase; letter-spacing: .14em; font-weight: 800; color: var(--ink); }
   .brand { font-size: 12px; text-transform: uppercase; letter-spacing: .16em; font-weight: 800; white-space: nowrap; padding-top: 6px; }
   .brand .day { color: var(--accent); letter-spacing: .08em; }
@@ -873,6 +876,7 @@ function fitPlace() {
   const box = document.getElementById("where");
   if (!el || !box) return;
   const max = app.clientWidth - parseFloat(getComputedStyle(app).paddingLeft) - parseFloat(getComputedStyle(app).paddingRight);
+  // (plattan sticker ut 12 px till vänster och har 12 px padding på var sida → samma textbredd som sidan)
   let size = 36;
   el.style.fontSize = size + "px";
   while (el.scrollWidth > max && size > 16) { size -= 1; el.style.fontSize = size + "px"; }
