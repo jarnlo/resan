@@ -53,8 +53,6 @@
     padding-right: max(18px, env(safe-area-inset-right, 0px));
     max-width: 560px; margin: 0 auto;
   }
-  /* Safari på iPhone (inte hemskärmsappen) lägger sitt verktygsfält över sidans botten. */
-  .ios-browser main { padding-bottom: calc(max(18px, env(safe-area-inset-bottom, 0px)) + 72px); }
   .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
   .where { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 0; }
   .where .day { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; font-weight: 800; color: var(--accent); }
@@ -66,8 +64,8 @@
   .panel { margin-top: auto; min-height: 0; overflow-y: auto; scrollbar-width: none; }
   .panel::-webkit-scrollbar { display: none; }
   .viewing { margin-bottom: 10px; font-size: 13px; color: var(--note); }
-  .back { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px; border: 0; border-radius: 12px;
-          background: var(--glass); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--ink); font: inherit; font-size: 15px; font-weight: 600; text-shadow: none; cursor: pointer; }
+  .back { display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 12px; border: 0; border-radius: 10px;
+          background: var(--glass); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; text-shadow: none; cursor: pointer; }
   [hidden] { display: none !important; }
   .date { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
   .clockrow { display: flex; justify-content: space-between; align-items: flex-end; margin: 6px 0 12px; }
@@ -98,7 +96,7 @@
   .timeline.dragging .thumb { transform: scale(1.2); }
   .timeline:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 4px; border-radius: 8px; }
   .arrows { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .arrow { width: 44px; height: 44px; border-radius: 12px; border: 0; background: var(--glass); color: var(--ink); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  .arrow { width: 36px; height: 36px; border-radius: 10px; border: 0; background: var(--glass); color: var(--ink); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
            display: grid; place-items: center; cursor: pointer; }
   .arrow:active { transform: scale(.94); }
   .arrow:disabled { opacity: .35; }
@@ -277,7 +275,7 @@ const lsGet = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch
 const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 
 // ---------- state ----------
-const state = { view: null, viewAt: 0, weather: {}, photo: {} };
+const state = { view: null, viewAt: 0, weather: {}, photo: {}, noPhoto: {} };
 
 // ---------- väder ----------
 const wxCache = {};
@@ -346,23 +344,24 @@ async function loadPhoto(n, wcode) {
   if (!UNSPLASH_KEY) return;
   const loc = DAYS[n][1];
   const tod = n === todayNumber() ? timeOfDay() : "any";
-  const raw = wxWord(wcode);
-  const wx = (tod === "night" || tod === "sunset") && (raw === "sunny" || raw === "cloudy") ? null : raw;
+  // Unsplash-nyckeln har 50 sökningar/timme och delas av alla. Därför inget väderord i sökningen här,
+  // och så få reservsökningar som möjligt.
   const slot = Math.floor(Date.now() / (ROTATE_MIN * 60000));
-  const k = `${loc}|${tod}|${wx}|${slot}`;
+  const k = `${loc}|${tod}|${slot}`;
   if (photoKeys[n] === k) return;
   photoKeys[n] = k;
   const [place, broad] = PHOTO_Q[loc];
   const todWord = tod === "day" || tod === "any" ? "" : tod;
   const tries = (tod === "night"
-    ? [[place, "night", wx], [place, "night"], [place, "night lights"], [broad, "night"], [broad, "night city"]]
-    : [[place, todWord, wx], [place, todWord], [place], [broad, todWord, wx], [broad, todWord], [broad]]
+    ? [[place, "night"], [place, "night lights"], [broad, "night"]]
+    : [[place, todWord], [place], [broad, todWord], [broad]]
   ).map((a) => a.filter(Boolean).join(" "));
   const show = (results) => {
     const p = results[(n * 7 + slot) % results.length];
     const seen = lsGet("mira-unsplash-seen") || {};
     if (!seen[p.id]) { seen[p.id] = 1; lsSet("mira-unsplash-seen", seen); fetch(`${p.download}&client_id=${UNSPLASH_KEY}`).catch(() => {}); }
     state.photo[n] = p;
+    state.noPhoto[n] = false;
     if (n === currentDay()) render();
   };
   const pool = [];
@@ -371,9 +370,11 @@ async function loadPhoto(n, wcode) {
       const results = (await searchUnsplash(q)).filter((p) => fitsTod(p, tod));
       if (results.length >= 3) { show(results); return; }
       for (const p of results) if (!pool.some((x) => x.id === p.id)) pool.push(p);
-    } catch (e) { photoKeys[n] = null; return; }
+    } catch (e) { photoKeys[n] = null; break; }
   }
-  if (pool.length) show(pool);
+  if (pool.length) { show(pool); return; }
+  // Ingen bild att få (t.ex. slut på kvoten): hellre ingen bild än förra ortens.
+  if (!state.photo[n]) { state.noPhoto[n] = true; if (n === currentDay()) render(); }
 }
 async function loadDay(n) {
   const w = await loadWeather(n);
@@ -398,12 +399,18 @@ function setBackground(img) {
   host.replaceChildren(el);
 }
 
+function clearBackground() {
+  if (!fade.cur) return;
+  fade.cur = null;
+  document.getElementById("bg").style.backgroundImage = "";
+  const old = document.getElementById("imgHost").querySelector(".bgimg");
+  if (old) old.classList.remove("in"); // tonas ut till mörk bakgrund
+}
+
 // ---------- vy ----------
 const currentDay = () => state.view != null ? state.view : clampDay(todayNumber());
 const pct = (k) => ((k - 1) / (TOTAL - 1)) * 100;
 const app = document.getElementById("app");
-if (/iP(hone|od|ad)/.test(navigator.userAgent) && !navigator.standalone && !matchMedia("(display-mode: standalone)").matches)
-  document.documentElement.classList.add("ios-browser");
 
 function weatherHtml(w, isToday, loc) {
   const href = `https://www.yr.no/en/forecast/daily-table/${LOC[loc].join(",")}`;
@@ -502,6 +509,7 @@ function render() {
   const [place, loc, title, text] = DAYS[n];
   const photo = state.photo[n];
   if (photo) setBackground(photo.img);
+  else if (state.noPhoto[n]) clearBackground();
   const t = TRAVEL[n];
   const tripHtml = t ? (() => {
     const tm = /buss|bil|motorcykel/i.test(t[0]) ? "driving" : /tåg/i.test(t[0]) ? "transit" : "";
