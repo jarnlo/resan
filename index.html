@@ -1010,6 +1010,19 @@ function setView(m, load) {
   if (load) loadDay(m);
 }
 
+// Inbäddad i Mac-widgeten (iframe): länkar som ska öppnas i ny flik skickas till widgeten,
+// som öppnar dem i den vanliga webbläsaren. Bara https-länkar.
+const embedded = window.parent !== window;
+if (embedded) {
+  document.documentElement.classList.add("embedded");
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[target="_blank"]');
+    if (!a || !/^https:\/\//.test(a.href)) return;
+    e.preventDefault();
+    window.parent.postMessage({ resanOpen: a.href }, "*");
+  }, true);
+}
+
 // Svep åt sidan för att byta dag (inte på reglaget).
 let sx = null, sy = null;
 document.addEventListener("touchstart", (e) => {

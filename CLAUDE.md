@@ -2,7 +2,8 @@
 
 Webbsida för Mira och resekompisarna: dagens program, väder, bild från orten och egna foton.
 Resan 4 nov – 14 dec 2026 (41 dagar, dag 1 = 4 nov). Kan läggas på hemskärmen (manifest + ikoner).
-Systerprojekt: Übersicht-widgeten `~/Documents/widgets/miras-resa.jsx` (Pontus Mac).
+Visas på Pontus Mac via Übersicht-widgeten `~/Documents/widgets/resan.jsx`, som bäddar in https://jarnlo.se/resan/ i en iframe.
+Inbäddad (`embedded`) skickar sidan `postMessage({resanOpen: url})` för länkar med target=_blank; widgeten öppnar dem med `open`.
 
 ## Filer
 - `index.html` – hela sidan (HTML, CSS, JS i en fil).
@@ -38,8 +39,8 @@ Systerprojekt: Übersicht-widgeten `~/Documents/widgets/miras-resa.jsx` (Pontus 
 - Exakt en skärm hög, ingen scroll. Svep åt sidan byter dag. Snäpper tillbaka till idag efter 2 min.
 
 ## Viktigt
-- **Programmet finns i två kopior**: `DAYS`, `TRAVEL`, `LOC`, `PHOTO_Q` här och i `~/Documents/widgets/miras-resa.jsx`. Ändra på båda,
-  och översätt nya texter i `DAYS_EN`.
+- Programmet (`DAYS`, `TRAVEL`, `LOC`, `PHOTO_Q`) finns bara här. Översätt nya texter i `DAYS_EN`.
+  (Gamla widgeten med egen kopia ligger som backup i `~/Documents/widgets/gammal/miras-resa.jsx.bak`.)
 - Lokalt test: `.claude/launch.json` kör `php -S 127.0.0.1:8765` här. För uppladdning behövs en lokal `config.php` med en testkod
   (gitignorerad, följer inte med i paketet).
 - Testa alltid i mobilstorlek (375×812 och 360 px bredd): ingen scroll, inget som slår i varandra.
