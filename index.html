@@ -129,6 +129,12 @@
             right: max(18px, env(safe-area-inset-right, 0px)); max-width: calc(100vw - 270px); text-align: right;
             font-size: 9px; line-height: 1.35; color: rgba(255,255,255,.32); text-shadow: none; letter-spacing: .02em; }
   .credit a { text-decoration: none; }
+  /* Små pilar på bildens kanter när dagen har flera uppladdade foton. Mitt på den fria bildytan. */
+  .imgnav { position: fixed; top: 38%; z-index: 3; width: 32px; height: 48px; border: 0; padding: 0; display: grid; place-items: center;
+            background: none; color: rgba(255,255,255,.55); cursor: pointer; filter: drop-shadow(0 1px 3px rgba(0,0,0,.5)); }
+  .imgnav:hover, .imgnav:focus-visible { color: #fff; }
+  .imgnav.prev { left: max(4px, env(safe-area-inset-left, 0px)); }
+  .imgnav.next { right: max(4px, env(safe-area-inset-right, 0px)); }
   /* Egna foton: samma diskreta kredit, namnet och "Ta bort" går att trycka på. */
   .credit button { border: 0; background: none; padding: 4px 0; margin: -4px 0; color: inherit; font: inherit; cursor: pointer; }
   .credit button:hover, .credit button:focus-visible { color: var(--ink); }
@@ -320,7 +326,7 @@ const STR = {
   sv: {
     day: "Dag", today: "Idag", sweden: "Sverige", approx: "ca", photo: "Photo credit", ownPhoto: "Egen bild", del: "Ta bort foto",
     loadingWx: "Hämtar väder…", noWx: "Ingen prognos än", prev: "Föregående dag", next: "Nästa dag", add: "Lägg till bilder för den här dagen",
-    pick: "Välj dag", nextPhoto: "Nästa bild",
+    pick: "Välj dag", nextPhoto: "Nästa bild", prevPhoto: "Föregående bild",
     back: (d) => `Tillbakablick · ${d} dag${d === 1 ? "" : "ar"} sedan`, ahead: (d) => `Framåtblick · ${d} dag${d === 1 ? "" : "ar"} kvar`,
     before: (d) => `${d} ${d === 1 ? "dag" : "dagar"} kvar`, beforeText: "Resan börjar 4 november.", after: "Hemma igen", afterText: "Resan tog slut 14 december.",
     wxAria: (l, t) => `Väder: ${l}, ${t} grader. Öppnar prognosen på yr.no`, tripAria: (m, r, km) => `${m} ${r}, ca ${km} km. Öppnar rutten i Google Maps`,
@@ -336,7 +342,7 @@ const STR = {
   en: {
     day: "Day", today: "Today", sweden: "Sweden", approx: "about", photo: "Photo credit", ownPhoto: "Own photo", del: "Delete photo",
     loadingWx: "Loading weather…", noWx: "No forecast yet", prev: "Previous day", next: "Next day", add: "Add photos to this day",
-    pick: "Choose day", nextPhoto: "Next photo",
+    pick: "Choose day", nextPhoto: "Next photo", prevPhoto: "Previous photo",
     back: (d) => `Looking back · ${d} day${d === 1 ? "" : "s"} ago`, ahead: (d) => `Looking ahead · ${d} day${d === 1 ? "" : "s"} to go`,
     before: (d) => `${d} ${d === 1 ? "day" : "days"} to go`, beforeText: "The trip starts on 4 November.", after: "Home again", afterText: "The trip ended on 14 December.",
     wxAria: (l, t) => `Weather: ${l}, ${t} degrees. Opens the forecast on yr.no`, tripAria: (m, r, km) => `${m} ${r}, about ${km} km. Opens the route in Google Maps`,
@@ -610,6 +616,8 @@ function buildShell() {
     <div class="panel">
       <div id="content"></div>
       <div class="credit" id="credit"></div>
+      <button class="imgnav prev" id="imgPrev" type="button" hidden aria-label="${T("prevPhoto")}"><svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M9 2 2 10l7 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="imgnav next" id="imgNext" type="button" hidden aria-label="${T("nextPhoto")}"><svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M3 2l7 8-7 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="footrow">
       <button class="upload" id="upload" type="button" hidden><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 11V3M4.5 6.5 8 3l3.5 3.5M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>${T("upload")}</button>
       <button class="minelink" id="mine" type="button" hidden></button>
@@ -674,7 +682,7 @@ function render() {
   const [place, loc] = DAYS[n];
   const title = dayTitle(n), text = dayText(n);
   const own = state.own[n] || [];
-  const ownI = own.length ? (Math.floor(Date.now() / (ROTATE_MIN * 60000)) + state.ownIdx) % own.length : 0;
+  const ownI = own.length ? (((Math.floor(Date.now() / (ROTATE_MIN * 60000)) + state.ownIdx) % own.length) + own.length) % own.length : 0;
   const photo = own.length ? null : state.photo[n];
   if (own.length) setBackground(own[ownI].url);
   else if (photo) setBackground(photo.img);
@@ -730,6 +738,7 @@ function render() {
   document.getElementById("next").disabled = n >= TOTAL;
   document.getElementById("back").hidden = isToday;
   document.getElementById("upload").hidden = !(api && codeOk);
+  document.getElementById("imgPrev").hidden = document.getElementById("imgNext").hidden = own.length < 2;
   const nMine = myPhotos().reduce((t, [, l]) => t + l.length, 0);
   const mineBtn = document.getElementById("mine");
   mineBtn.hidden = !(api && codeOk && nMine);
@@ -928,7 +937,11 @@ document.addEventListener("click", async (e) => {
 
 document.addEventListener("click", (e) => {
   if (e.target.closest("#upload")) { if (getName()) document.getElementById("file").click(); else askName(); }
-  if (e.target.closest("#ownNext")) { state.ownIdx++; render(); }
+  if (e.target.closest("#imgPrev")) { state.ownIdx--; render(); }
+  else if (e.target.closest("#ownNext, #imgNext")) { state.ownIdx++; render(); }
+  // Tryck på själva bilden (inte på knappar, länkar, tidslinjen eller ett öppet blad) = nästa uppladdade bild.
+  else if (!e.target.closest("a, button, input, label, #timeline, #sheet, .toast")
+           && (state.own[currentDay()] || []).length > 1) { state.ownIdx++; render(); }
   const lb = e.target.closest(".lang");
   if (lb && lb.dataset.lang !== L) {
     L = lb.dataset.lang;
