@@ -67,7 +67,10 @@
   .back { display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 12px; border: 0; border-radius: 10px;
           background: var(--glass); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; text-shadow: none; cursor: pointer; }
   [hidden] { display: none !important; }
-  .langrow { margin-top: 14px; display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-size: 12px; text-shadow: none; }
+  .footrow { margin-top: 14px; display: flex; align-items: center; gap: 12px; }
+  .upload { border: 0; font: inherit; font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 10px; cursor: pointer;
+            background: var(--glass); color: var(--ink); text-shadow: none; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .langrow { margin-left: auto; display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-size: 12px; text-shadow: none; }
   .lang { border: 0; background: none; padding: 6px 0; color: var(--ink-3); font: inherit; cursor: pointer; }
   .lang[aria-pressed="true"] { color: var(--ink); font-weight: 600; cursor: default; }
   .langsep { color: var(--ink-3); opacity: .6; }
@@ -83,11 +86,6 @@
   .sep { height: 1px; background: var(--line); margin: 4px 0 18px; }
   h1 { font-size: 30px; line-height: 1.15; margin: 0 0 10px; font-weight: 700; text-wrap: balance; }
   .text { font-size: 18px; line-height: 1.45; margin: 0; color: rgba(255,255,255,.92); }
-  .trip { display: inline-flex; flex-direction: column; gap: 3px; margin-top: 18px; padding: 10px 14px; border-radius: 14px;
-          background: var(--chip); color: var(--ink); text-shadow: none; max-width: 100%; }
-  .trip-top { display: flex; align-items: baseline; gap: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-2); }
-  .trip-top b { color: var(--ink); font-weight: 700; letter-spacing: .04em; }
-  .trip-route { font-size: 15px; font-weight: 600; }
 
   .scrub { width: 100%; margin: -6px 0 -4px; }
   .timeline { position: relative; height: 30px; touch-action: none; }
@@ -297,10 +295,11 @@ const STR = {
     back: (d) => `Tillbakablick · ${d} dag${d === 1 ? "" : "ar"} sedan`, ahead: (d) => `Framåtblick · ${d} dag${d === 1 ? "" : "ar"} kvar`,
     before: (d) => `${d} ${d === 1 ? "dag" : "dagar"} kvar`, beforeText: "Resan börjar 4 november.", after: "Hemma igen", afterText: "Resan tog slut 14 december.",
     wxAria: (l, t) => `Väder: ${l}, ${t} grader. Öppnar prognosen på yr.no`, tripAria: (m, r, km) => `${m} ${r}, ca ${km} km. Öppnar rutten i Google Maps`,
-    addTitle: "Lägg till bilder", addText: "Skriv ditt namn och resans kod. Namnet visas på bilderna du lägger upp. Båda sparas på den här telefonen, så du behöver bara göra det en gång.",
+    upload: "Ladda upp foto", nameText: "Skriv ditt namn. Det visas på bilderna du laddar upp och sparas på den här telefonen.",
+    addTitle: "Ladda upp foto", addText: "Skriv ditt namn och resans kod. Namnet visas på bilderna du lägger upp. Båda sparas på den här telefonen, så du behöver bara göra det en gång.",
     yourName: "Ditt namn", code: "Resans kod", cancel: "Avbryt", go: "Fortsätt", wrongCode: "Fel kod. Fråga Pontus.", noServer: "Kunde inte nå servern. Försök igen.",
     thanks: (n) => `Tack, ${n}`, whereTo: (d, ds) => `Bilderna hamnar på dag ${d}, ${ds}.`, later: "Senare", choose: "Välj bilder",
-    uploading: (i, n) => `Laddar upp ${i} av ${n} …`, codeGone: "Koden gäller inte längre. Tryck på + och skriv in den igen.",
+    uploading: (i, n) => `Laddar upp ${i} av ${n} …`, codeGone: "Koden gäller inte längre. Be Pontus om en ny länk.",
     upDone: (k, d) => `${k === 1 ? "Bilden" : k + " bilder"} tillagd${k === 1 ? "" : "a"} på dag ${d}.`, upSome: (k, f) => `${k} uppladdade, ${f} gick inte att ladda upp.`,
     delTitle: "Ta bort bilden?", delText: (d) => `Den försvinner från dag ${d} för alla. Pontus kan återställa den om det blev fel.`,
     delWrong: "Fel kod. Tryck på + och skriv in den igen.", delNotYours: "Du kan bara ta bort dina egna bilder.", delFail: "Kunde inte ta bort bilden.", delDone: "Bilden är borttagen.",
@@ -312,10 +311,11 @@ const STR = {
     back: (d) => `Looking back · ${d} day${d === 1 ? "" : "s"} ago`, ahead: (d) => `Looking ahead · ${d} day${d === 1 ? "" : "s"} to go`,
     before: (d) => `${d} ${d === 1 ? "day" : "days"} to go`, beforeText: "The trip starts on 4 November.", after: "Home again", afterText: "The trip ended on 14 December.",
     wxAria: (l, t) => `Weather: ${l}, ${t} degrees. Opens the forecast on yr.no`, tripAria: (m, r, km) => `${m} ${r}, about ${km} km. Opens the route in Google Maps`,
-    addTitle: "Add photos", addText: "Enter your name and the trip code. Your name is shown on the photos you add. Both are saved on this phone, so you only need to do this once.",
+    upload: "Upload photo", nameText: "Enter your name. It's shown on the photos you upload and saved on this phone.",
+    addTitle: "Upload photo", addText: "Enter your name and the trip code. Your name is shown on the photos you add. Both are saved on this phone, so you only need to do this once.",
     yourName: "Your name", code: "Trip code", cancel: "Cancel", go: "Continue", wrongCode: "Wrong code. Ask Pontus.", noServer: "Couldn't reach the server. Try again.",
     thanks: (n) => `Thanks, ${n}`, whereTo: (d, ds) => `Your photos go on day ${d}, ${ds}.`, later: "Later", choose: "Choose photos",
-    uploading: (i, n) => `Uploading ${i} of ${n} …`, codeGone: "The code no longer works. Tap + and enter it again.",
+    uploading: (i, n) => `Uploading ${i} of ${n} …`, codeGone: "The code no longer works. Ask Pontus for a new link.",
     upDone: (k, d) => `${k === 1 ? "Photo" : k + " photos"} added to day ${d}.`, upSome: (k, f) => `${k} uploaded, ${f} couldn't be uploaded.`,
     delTitle: "Delete this photo?", delText: (d) => `It disappears from day ${d} for everyone. Pontus can restore it if it was a mistake.`,
     delWrong: "Wrong code. Tap + and enter it again.", delNotYours: "You can only delete your own photos.", delFail: "Couldn't delete the photo.", delDone: "Photo deleted.",
@@ -401,7 +401,8 @@ const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } ca
 
 // ---------- state ----------
 const state = { view: null, viewAt: 0, weather: {}, photo: {}, noPhoto: {}, own: {}, ownIdx: 0 };
-let api = false; // true när api.php svarar (på Inleed, inte på GitHub Pages)
+let api = false;    // true när api.php svarar (på Inleed, inte på GitHub Pages)
+let codeOk = false; // true när telefonen har en kod som servern godkänt
 
 // ---------- väder ----------
 const wxCache = {};
@@ -565,7 +566,6 @@ function buildShell() {
       <span class="arrows">
             <button class="arrow" id="prev" type="button" aria-label="${T("prev")}"><svg width="14" height="14" viewBox="0 0 10 10" aria-hidden="true"><path d="M6.5 1.5 3 5l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             <button class="arrow" id="next" type="button" aria-label="${T("next")}"><svg width="14" height="14" viewBox="0 0 10 10" aria-hidden="true"><path d="M3.5 1.5 7 5 3.5 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <button class="arrow" id="add" type="button" hidden aria-label="${T("add")}"><svg width="14" height="14" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v9M1.5 6h9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
         <button class="back" id="back" type="button" hidden>${T("today")} ${BACK_ICON}</button>
       </span>
       <div class="scrub">
@@ -581,8 +581,11 @@ function buildShell() {
     <div class="panel">
       <div id="content"></div>
       <div class="credit" id="credit"></div>
+      <div class="footrow">
+      <button class="upload" id="upload" type="button" hidden>${T("upload")}</button>
       <div class="langrow" role="group" aria-label="Språk / Language">
         <button class="lang" type="button" data-lang="sv" lang="sv" aria-pressed="${L === "sv"}">Svenska</button><span class="langsep" aria-hidden="true">|</span><button class="lang" type="button" data-lang="en" lang="en" aria-pressed="${L === "en"}">English</button>
+      </div>
       </div>
       <input type="file" id="file" accept="image/*" multiple hidden>
     </div>`;
@@ -647,19 +650,18 @@ function render() {
   else if (photo) setBackground(photo.img);
   else if (state.noPhoto[n]) clearBackground();
   const t = TRAVEL[n];
-  const tripHtml = t ? (() => {
-    const tm = /buss|bil|motorcykel/i.test(t[0]) ? "driving" : /tåg/i.test(t[0]) ? "transit" : "";
-    const href = `https://www.google.com/maps/dir/?api=1&origin=${LOC[t[3]].join(",")}&destination=${LOC[t[4]].join(",")}${tm ? "&travelmode=" + tm : ""}`;
-    return `<a class="trip" href="${href}" target="_blank" rel="noopener" aria-label="${esc(T("tripAria", modeName(t[0]), t[1], t[2]))}">
-      <span class="trip-top">${esc(modeName(t[0]))} <b>${T("approx")} ${t[2].toLocaleString(L === "en" ? "en-GB" : "sv-SE")} km</b></span>
-      <span class="trip-route">${esc(t[1])}<span class="ext">↗</span></span></a>`;
-  })() : "";
+  // Resdagar: ortnamnet öppnar rutten och dagraden får färdsätt + distans. Övriga dagar: kartan för orten.
+  const tm = t ? (/buss|bil|motorcykel/i.test(t[0]) ? "driving" : /tåg/i.test(t[0]) ? "transit" : "") : "";
+  const placeHref = t
+    ? `https://www.google.com/maps/dir/?api=1&origin=${LOC[t[3]].join(",")}&destination=${LOC[t[4]].join(",")}${tm ? "&travelmode=" + tm : ""}`
+    : `https://www.google.com/maps/search/?api=1&query=${LOC[loc].join(",")}`;
+  const tripLine = t ? ` · ${esc(modeName(t[0]))} · ${T("approx")} ${t[2].toLocaleString(L === "en" ? "en-GB" : "sv-SE")} km` : "";
   const diff = Math.abs(n - today);
   const ut = photo && photo.profile ? "?utm_source=vietnam_thailand&utm_medium=referral" : "";
 
   document.getElementById("where").innerHTML = `
-    <a class="place" href="https://www.google.com/maps/search/?api=1&query=${LOC[t ? t[4] : loc].join(",")}" target="_blank" rel="noopener">${esc(place)}<span class="ext">↗</span></a>
-    <span class="day">${T("day")} ${n} / ${TOTAL}</span>`;
+    <a class="place" href="${placeHref}" target="_blank" rel="noopener"${t ? ` aria-label="${esc(T("tripAria", modeName(t[0]), t[1], t[2]))}"` : ""}>${esc(place)}<span class="ext">↗</span></a>
+    <span class="day">${T("day")} ${n} / ${TOTAL}${tripLine}</span>`;
   document.getElementById("content").innerHTML = `
     ${isToday ? "" : `<div class="viewing"><span>${n < today ? T("back", diff) : T("ahead", diff)}</span></div>`}
     <div class="date">${dateStr(n)}</div>
@@ -673,7 +675,7 @@ function render() {
     <div class="sep"></div>
     <h1>${esc(title)}</h1>
     <p class="text">${esc(text)}</p>
-    ${tripHtml}`;
+    `;
   const credit = document.getElementById("credit");
   credit.classList.toggle("has-own", own.length > 0);
   credit.innerHTML = own.length
@@ -695,7 +697,7 @@ function render() {
   document.getElementById("prev").disabled = n <= 1;
   document.getElementById("next").disabled = n >= TOTAL;
   document.getElementById("back").hidden = isToday;
-  document.getElementById("add").hidden = !api;
+  document.getElementById("upload").hidden = !(api && codeOk);
 }
 
 // ---------- egna bilder (api.php på Inleed) ----------
@@ -752,31 +754,40 @@ function sheet(html) {
 }
 const closeSheet = () => { const el = document.getElementById("sheet"); if (el) el.remove(); };
 
-// Första gången: koden. Sedan väljs bilder via en etikett (en riktig tryckning, krävs av iPhone).
-function askCode() {
+// Koden kommer via en delad länk: …/#kod=XXXX (eller ?kod=XXXX). Den kontrolleras, sparas och tas bort ur adressen.
+async function verifyCode() {
+  const m = /[#&?]kod=([^&]+)/.exec(location.hash + location.search);
+  if (m) {
+    setCode(decodeURIComponent(m[1]).trim());
+    history.replaceState(null, "", location.pathname);
+  }
+  if (!getCode()) { codeOk = false; return; }
+  const fd = new FormData(); fd.append("code", getCode());
+  const res = await apiFetch("check", fd).catch(() => null);
+  if (res && res.status === 403) { setCode(""); codeOk = false; }
+  else codeOk = !!(res && res.ok);
+  render();
+}
+
+// Första uppladdningen: bara namnet (koden har telefonen redan). Bilder väljs via en etikett,
+// en riktig tryckning, vilket iPhone kräver för filväljaren.
+function askName() {
   const el = sheet(`<h2>${T("addTitle")}</h2>
-    <p>${T("addText")}</p>
-    <form id="codeForm" style="display:grid;gap:12px">
+    <p>${T("nameText")}</p>
+    <form id="nameForm" style="display:grid;gap:12px">
       <input type="text" id="nameInput" autocomplete="given-name" placeholder="${T("yourName")}" aria-label="${T("yourName")}" maxlength="40" required value="${esc(getName())}">
-      <input type="password" id="codeInput" autocomplete="current-password" placeholder="${T("code")}" aria-label="${T("code")}" required value="${esc(getCode())}">
-      <p class="sheet-err" id="codeErr" hidden></p>
-      <div class="sheet-row"><button type="button" class="btn" data-close>${T("cancel")}</button><button class="btn primary" id="codeOk">${T("go")}</button></div>
+      <div class="sheet-row"><button type="button" class="btn" data-close>${T("cancel")}</button><button class="btn primary">${T("go")}</button></div>
     </form>`);
-  el.querySelector(getName() ? "#codeInput" : "#nameInput").focus();
-  el.querySelector("#codeForm").addEventListener("submit", async (e) => {
+  el.querySelector("#nameInput").focus();
+  el.querySelector("#nameForm").addEventListener("submit", (e) => {
     e.preventDefault();
-    const code = el.querySelector("#codeInput").value.trim();
-    const err = el.querySelector("#codeErr");
-    const fd = new FormData(); fd.append("code", code);
-    const res = await apiFetch("check", fd).catch(() => null);
-    if (!res || !res.ok) { err.textContent = res && res.status === 403 ? T("wrongCode") : T("noServer"); err.hidden = false; return; }
-    setCode(code);
     setName(el.querySelector("#nameInput").value.trim());
     el.querySelector(".sheet-box").innerHTML = `<h2>${T("thanks", esc(getName()))}</h2>
       <p>${T("whereTo", currentDay(), dateStr(currentDay()))}</p>
       <div class="sheet-row"><button type="button" class="btn" data-close>${T("later")}</button><label class="btn primary" for="file">${T("choose")}</label></div>`;
   });
 }
+
 
 // Skala ner i telefonen före uppladdning (snabbt även på mobildata). Servern skalar och rensar igen.
 async function shrink(file) {
@@ -802,7 +813,7 @@ async function uploadFiles(files) {
       const fd = new FormData();
       fd.append("code", getCode()); fd.append("day", String(day)); fd.append("name", getName()); fd.append("photo", blob, "bild.jpg");
       const res = await apiFetch("upload", fd);
-      if (res.status === 403) { setCode(""); toast(T("codeGone"), 5000); return; }
+      if (res.status === 403) { setCode(""); codeOk = false; render(); toast(T("codeGone"), 5000); return; }
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "fel");
       done++;
     } catch (e) { failed++; }
@@ -822,7 +833,7 @@ function askDelete(file) {
     closeSheet();
     if (res && res.status === 403) {
       const j = await res.json().catch(() => ({}));
-      if (/kod/i.test(j.error || "")) { setCode(""); toast(T("delWrong"), 4000); }
+      if (/kod/i.test(j.error || "")) { setCode(""); codeOk = false; render(); toast(T("codeGone"), 4000); }
       else toast(T("delNotYours"), 4000);
       return;
     }
@@ -835,7 +846,7 @@ function askDelete(file) {
 }
 
 document.addEventListener("click", (e) => {
-  if (e.target.closest("#add")) { if (getCode() && getName()) document.getElementById("file").click(); else askCode(); }
+  if (e.target.closest("#upload")) { if (getName()) document.getElementById("file").click(); else askName(); }
   if (e.target.closest("#ownNext")) { state.ownIdx++; render(); }
   const lb = e.target.closest(".lang");
   if (lb && lb.dataset.lang !== L) {
@@ -846,7 +857,7 @@ document.addEventListener("click", (e) => {
     render();
   }
   const del = e.target.closest("#ownDel");
-  if (del) { if (getCode()) askDelete(del.dataset.file); else askCode(); }
+  if (del) askDelete(del.dataset.file);
 });
 document.addEventListener("change", (e) => {
   if (e.target.id !== "file") return;
@@ -905,7 +916,7 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) tick
 setInterval(tick, 30 * 1000);
 render();
 loadDay(currentDay());
-loadOwn();
+loadOwn().then(verifyCode);
 setInterval(() => { if (api && !document.hidden) loadOwn(); }, 2 * 60 * 1000);
 </script>
 </body>
