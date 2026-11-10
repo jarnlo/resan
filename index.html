@@ -190,6 +190,8 @@
 "use strict";
 // ▼ Samma data som widgeten (miras-resa.jsx). Ändras programmet: ändra på båda ställena.
 const UNSPLASH_KEY = "hSEU8Wvs6zDmBAts4Ov1oxDaHCDBx3SrXJbq9iEEjlw";
+// Google Analytics mät-id (G-XXXXXXX). Tomt = ingen mätning och ingen samtyckesfråga.
+const GA_ID = "";
 const START = Date.UTC(2026, 10, 4);
 const TOTAL = 41;
 const ROTATE_MIN = 10;
@@ -1065,6 +1067,22 @@ setInterval(tick, 30 * 1000);
 render();
 loadDay(currentDay());
 loadOwn().then(verifyCode);
+
+// ---------- Google Analytics ----------
+// Laddas inte utan GA_ID och inte i Mac-widgeten (embedded), så att widgetens omladdningar inte räknas.
+// Ingen samtyckesfråga (Pontus val). OBS: GA sätter kakor; svensk lag kräver egentligen samtycke.
+function loadGA() {
+  if (window.gtag) return;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { dataLayer.push(arguments); };
+  gtag("js", new Date());
+  gtag("config", GA_ID, { anonymize_ip: true });
+  const sc = document.createElement("script");
+  sc.async = true;
+  sc.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(GA_ID);
+  document.head.appendChild(sc);
+}
+if (GA_ID && !embedded) loadGA();
 setInterval(() => { if (api && !document.hidden) loadOwn(); }, 2 * 60 * 1000);
 </script>
 </body>
