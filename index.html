@@ -512,7 +512,7 @@ function render() {
   const ut = photo && photo.profile ? "?utm_source=vietnam_thailand&utm_medium=referral" : "";
 
   document.getElementById("where").innerHTML = `
-    <a class="place" href="https://www.google.com/maps/search/?api=1&query=${LOC[loc].join(",")}" target="_blank" rel="noopener">${esc(place)}<span class="ext">↗</span></a>
+    <a class="place" href="https://www.google.com/maps/search/?api=1&query=${LOC[t ? t[4] : loc].join(",")}" target="_blank" rel="noopener">${esc(place)}<span class="ext">↗</span></a>
     <span class="day">Dag ${n} / ${TOTAL}</span>`;
   document.getElementById("content").innerHTML = `
     ${isToday ? "" : `<div class="viewing"><span>${n < today ? "Tillbakablick" : "Framåtblick"} · ${diff} dag${diff === 1 ? "" : "ar"} ${n < today ? "sedan" : "kvar"}</span></div>`}
