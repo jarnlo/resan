@@ -131,6 +131,18 @@
   .credit button { border: 0; background: none; padding: 4px 0; margin: -4px 0; color: inherit; font: inherit; cursor: pointer; }
   .credit button:hover, .credit button:focus-visible { color: var(--ink); }
   .credit .del { text-decoration: underline; text-underline-offset: 2px; }
+  /* Uppladdad av någon i gruppen: tydlig kredit på en platta, namnet i fokus. */
+  .credit.is-own { top: max(16px, env(safe-area-inset-top, 0px)); max-width: calc(100vw - 210px); color: var(--ink); }
+  .credit .ownwrap { display: flex; align-items: stretch; height: 36px; border-radius: 10px; overflow: hidden; max-width: 100%;
+                     background: var(--glass); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .credit .ownbox { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 1px; margin: 0; padding: 0 10px;
+                    min-width: 0; flex: 1 1 auto; }
+  .credit .owndel { flex: 0 0 34px; margin: 0; padding: 0; display: grid; place-items: center; color: var(--ink-2);
+                    border-right: 1px solid rgba(255,255,255,.12); }
+  .credit .owndel:hover, .credit .owndel:focus-visible { color: #ff9a85; }
+  .credit .ownlabel { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; color: var(--ink-2);
+                      white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .credit .ownname { font-size: 14px; font-weight: 700; line-height: 1.1; letter-spacing: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sheet { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center;
            background: rgba(0,0,0,.55); padding: 16px; padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
   .sheet-box { width: 100%; max-width: 420px; background: #1f1b18; border-radius: 18px; padding: 20px; display: grid; gap: 12px; text-shadow: none; }
@@ -693,8 +705,11 @@ function render() {
     <p class="text">${esc(text)}</p>
     `;
   const credit = document.getElementById("credit");
+  credit.classList.toggle("is-own", own.length > 0);
   credit.innerHTML = own.length
-    ? `<button type="button" id="ownNext" aria-label="${T("nextPhoto")}">${T("photo")}: ${esc(own[ownI].by || T("ownPhoto"))}${own.length > 1 ? ` · ${ownI + 1}/${own.length}` : ""}</button>${own[ownI].mine ? `<br><button type="button" class="del" id="ownDel" data-file="${esc(own[ownI].file)}">${T("del")}</button>` : ""}`
+    ? `<span class="ownwrap">${own[ownI].mine ? `<button type="button" class="owndel" id="ownDel" data-file="${esc(own[ownI].file)}" aria-label="${T("del")}" title="${T("del")}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : ""}<button type="button" class="ownbox" id="ownNext" aria-label="${T("photo")}: ${esc(own[ownI].by || T("ownPhoto"))}. ${T("nextPhoto")}">
+         <span class="ownlabel">${T("photo")}</span>
+         <span class="ownname">${esc(own[ownI].by || T("ownPhoto"))}</span></button></span>`
     : photo
     ? `${T("photo")}: <a href="${esc((photo.profile || "https://unsplash.com") + ut)}" target="_blank" rel="noopener">${esc(photo.name)}</a> / <a href="https://unsplash.com/?utm_source=vietnam_thailand&utm_medium=referral" target="_blank" rel="noopener">Unsplash</a>`
     : "";
