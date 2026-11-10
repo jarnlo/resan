@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#14110f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Resan">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -30,8 +30,7 @@
   }
   * { box-sizing: border-box; }
   /* Exakt en skärm hög, ingen scroll: innehållet ligger i botten. */
-  /* --gap: uppmätt skillnad mellan skärm och sida i iPhones hemskärmsapp (se fixHeight). 0 annars. */
-  html, body { height: calc(100% + var(--gap, 0px)); overflow: hidden; }
+  html, body { height: 100%; overflow: hidden; }
   body {
     margin: 0; background: var(--ground); color: var(--ink);
     font-family: -apple-system, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
@@ -40,7 +39,7 @@
   }
   a { color: inherit; text-decoration: none; }
 
-  .bg, .bgimg, .shade { position: fixed; top: 0; left: 0; width: 100%; height: calc(100% + var(--gap, 0px)); pointer-events: none; }
+  .bg, .bgimg, .shade { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
   .bg { background-size: cover; background-position: center; }
   .bgimg { object-fit: cover; opacity: 0; transition: opacity 1.6s ease; }
   .bgimg.in { opacity: 1; }
@@ -56,7 +55,7 @@
     --pad-right: max(var(--pad), env(safe-area-inset-right, 0px));
   }
   main {
-    position: relative; height: 100%; height: calc(100dvh + var(--gap, 0px)); display: flex; flex-direction: column; overflow: hidden;
+    position: relative; height: 100%; height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
     padding: var(--pad-top) var(--pad-right) var(--pad-bottom) var(--pad-left);
     max-width: 560px; margin: 0 auto;
   }
@@ -817,18 +816,6 @@ const closeSheet = () => { const el = document.getElementById("sheet"); if (el) 
 const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
 if (standalone) document.documentElement.classList.add("standalone");
 
-// iPhones hemskärmsapp med genomskinlig statusrad: sidan ritas från skärmens överkant men får
-// skärmhöjd minus statusraden, så ett tomt band blir kvar nedtill. Mät skillnaden och fyll ut den.
-function fixHeight() {
-  if (!standalone) return;
-  const portrait = innerHeight >= innerWidth;
-  const sh = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
-  const gap = Math.round(sh - innerHeight);
-  document.documentElement.style.setProperty("--gap", gap > 0 && gap < 120 ? gap + "px" : "0px");
-}
-fixHeight();
-addEventListener("resize", fixHeight);
-addEventListener("orientationchange", () => setTimeout(fixHeight, 300));
 
 function askCode() {
   const el = sheet(`<h2>${T("haveCode")}</h2>

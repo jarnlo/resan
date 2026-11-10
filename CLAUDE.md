@@ -36,8 +36,8 @@ Inbäddad (`embedded`) skickar sidan `postMessage({resanOpen: url})` för länka
   Egna foton visar en platta uppe till höger: "PHOTO CREDIT" + namn (tryck = nästa), papperskorg för ens egna. Flera foton samma dag:
   små pilar på bildens kanter + tryck var som helst på bilden byter bild. Dagar med uppladdade foton visar bara dem (ingen Unsplash).
 - Språk: SV | EN nere till höger (kort för att rymmas vid 360 px), sparas i `resan-sprak`. Texter i `STR`, `DAYS_EN`, `MODE_EN`, `WX_EN`.
-- iPhone-hemskärmsapp (black-translucent statusrad) får skärmhöjd minus statusraden → tomt band nedtill. `fixHeight()` mäter
-  `screen.height - innerHeight` och lägger skillnaden i `--gap`, som läggs på html/body, main och bildlagren. 0 i vanlig webbläsare.
+- iPhone-hemskärmsapp: statusraden är `black` (inte `black-translucent`). Med genomskinlig statusrad blir webbfönstret kortare än skärmen
+  och ett tomt band syns nedtill som inte går att rita bort (testat med mätning, fungerade inte). Ändras inställningen måste ikonen läggas till på nytt.
 - Jämn luft: `--pad` 18 px runt hela fönstret (`--pad-top/-bottom/-left/-right`, statusrad/hemindikator går före). Tidslinjen är indragen
   6 px (prickens radie) så att pricken linjerar med knapparna och marginalen.
 - Exakt en skärm hög, ingen scroll. Svep åt sidan byter dag. Snäpper tillbaka till idag efter 2 min.
