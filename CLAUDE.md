@@ -41,7 +41,8 @@ Inbäddad (`embedded`) skickar sidan `postMessage({resanOpen: url})` för länka
 - Jämn luft: `--pad` 18 px runt hela fönstret (`--pad-top/-bottom/-left/-right`, statusrad/hemindikator går före). Tidslinjen är indragen
   6 px (prickens radie) så att pricken linjerar med knapparna och marginalen.
 - Google Analytics `G-5PXLSCYBNC` (konstant `GA_ID`), egendomen "Resan" i Pontus GA-konto. Laddas direkt utan samtyckesfråga (Pontus val,
-  trots att svensk lag egentligen kräver samtycke för kakorna). Laddas inte i Mac-widgeten (`embedded`).
+  trots att svensk lag egentligen kräver samtycke för kakorna). Laddas inte i Mac-widgeten (`embedded`), inte på localhost,
+  inte efter `#inte-rakna` (sparas i `resan-ingen-statistik`, `#rakna` slår på igen) och inte om uppladdningsnamnet är "Pontus".
 - Exakt en skärm hög, ingen scroll. Svep åt sidan byter dag. Snäpper tillbaka till idag efter 2 min.
 
 ## Viktigt

@@ -1082,7 +1082,24 @@ function loadGA() {
   sc.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(GA_ID);
   document.head.appendChild(sc);
 }
-if (GA_ID && !embedded) loadGA();
+// Räkna inte Pontus egna besök eller lokala tester.
+//   #inte-rakna i adressen = den här webbläsaren räknas aldrig (#rakna slår på igen).
+//   Namnet "Pontus" (för uppladdning) räknas inte heller: hemskärmsappen har eget minne och ingen adressrad.
+const NOTRACK_KEY = "resan-ingen-statistik";
+(() => {
+  const h = location.hash;
+  try {
+    if (/inte-rakna/.test(h)) localStorage.setItem(NOTRACK_KEY, "1");
+    if (/(^|#|&)rakna\b/.test(h) && !/inte-rakna/.test(h)) localStorage.removeItem(NOTRACK_KEY);
+  } catch (e) {}
+  if (/rakna/.test(h)) history.replaceState(null, "", location.pathname + location.search);
+})();
+const notTracked = () => {
+  if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return true;
+  try { if (localStorage.getItem(NOTRACK_KEY)) return true; } catch (e) {}
+  return getName().trim().toLowerCase() === "pontus";
+};
+if (GA_ID && !embedded && !notTracked()) loadGA();
 setInterval(() => { if (api && !document.hidden) loadOwn(); }, 2 * 60 * 1000);
 </script>
 </body>
