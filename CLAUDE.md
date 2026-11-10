@@ -30,6 +30,7 @@ Systerprojekt: Übersicht-widgeten `~/Documents/widgets/miras-resa.jsx` (Pontus 
 - Uppladdning: knappen "Ladda upp foto" (nere till vänster) syns bara med godkänd kod. Koden kommer via länken `#kod=`, kontrolleras,
   sparas (`resan-kod`) och tas bort ur adressen. Namnet frågas första gången (`resan-namn`). Bilden skalas i telefonen och igen på servern
   (1600 px, metadata/GPS bort). Varje telefon har en slumpnyckel (`resan-agare`, header `X-Resan-Owner`); bara den kan ta bort sina bilder.
+- Hemskärmsapp på iPhone har eget minne (får inte koden från länken): körs sidan fristående utan kod visas "Har du en kod?" där koden kan skrivas in.
 - "Mina foton (n)" bredvid uppladdningsknappen: egna bilder per dag med miniatyrer; tryck på bild = gå till dagen, "Ta bort foto" → "Säker?" → borttagen.
   Egna foton visar en platta uppe till höger: "PHOTO CREDIT" + namn (tryck = nästa), papperskorg för ens egna. Flera foton samma dag:
   små pilar på bildens kanter + tryck var som helst på bilden byter bild. Dagar med uppladdade foton visar bara dem (ingen Unsplash).

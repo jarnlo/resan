@@ -337,7 +337,7 @@ const STR = {
     uploading: (i, n) => `Laddar upp ${i} av ${n} …`, codeGone: "Koden gäller inte längre. Be Pontus om en ny länk.",
     upDone: (k, d) => `${k === 1 ? "Bilden" : k + " bilder"} tillagd${k === 1 ? "" : "a"} på dag ${d}.`, upSome: (k, f) => `${k} uppladdade, ${f} gick inte att ladda upp.`,
     delTitle: "Ta bort bilden?", delText: (d) => `Den försvinner från dag ${d} för alla. Pontus kan återställa den om det blev fel.`,
-    delWrong: "Fel kod. Tryck på + och skriv in den igen.", delNotYours: "Du kan bara ta bort dina egna bilder.", delFail: "Kunde inte ta bort bilden.", delDone: "Bilden är borttagen.", mine: "Mina foton", mineEmpty: "Du har inte laddat upp några foton än.", close: "Stäng", sure: "Säker?",
+    delWrong: "Fel kod. Tryck på + och skriv in den igen.", delNotYours: "Du kan bara ta bort dina egna bilder.", delFail: "Kunde inte ta bort bilden.", delDone: "Bilden är borttagen.", haveCode: "Har du en kod?", codeText: "Skriv in resans kod, den som står i länken du fått. Då kan du ladda upp foton härifrån.", codeOkMsg: "Klart! Nu kan du ladda upp foton.", mine: "Mina foton", mineEmpty: "Du har inte laddat upp några foton än.", close: "Stäng", sure: "Säker?",
   },
   en: {
     day: "Day", today: "Today", sweden: "Sweden", approx: "about", photo: "Photo credit", ownPhoto: "Own photo", del: "Delete photo",
@@ -353,7 +353,7 @@ const STR = {
     uploading: (i, n) => `Uploading ${i} of ${n} …`, codeGone: "The code no longer works. Ask Pontus for a new link.",
     upDone: (k, d) => `${k === 1 ? "Photo" : k + " photos"} added to day ${d}.`, upSome: (k, f) => `${k} uploaded, ${f} couldn't be uploaded.`,
     delTitle: "Delete this photo?", delText: (d) => `It disappears from day ${d} for everyone. Pontus can restore it if it was a mistake.`,
-    delWrong: "Wrong code. Tap + and enter it again.", delNotYours: "You can only delete your own photos.", delFail: "Couldn't delete the photo.", delDone: "Photo deleted.", mine: "My photos", mineEmpty: "You haven't uploaded any photos yet.", close: "Close", sure: "Sure?",
+    delWrong: "Wrong code. Tap + and enter it again.", delNotYours: "You can only delete your own photos.", delFail: "Couldn't delete the photo.", delDone: "Photo deleted.", haveCode: "Have a code?", codeText: "Enter the trip code, the one in the link you got. Then you can upload photos from here.", codeOkMsg: "Done! You can now upload photos.", mine: "My photos", mineEmpty: "You haven't uploaded any photos yet.", close: "Close", sure: "Sure?",
   },
 };
 const T = (k, ...a) => { const v = STR[L][k]; return typeof v === "function" ? v(...a) : v; };
@@ -621,6 +621,7 @@ function buildShell() {
       <div class="footrow">
       <button class="upload" id="upload" type="button" hidden><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 11V3M4.5 6.5 8 3l3.5 3.5M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>${T("upload")}</button>
       <button class="minelink" id="mine" type="button" hidden></button>
+      <button class="minelink" id="haveCode" type="button" hidden>${T("haveCode")}</button>
       <div class="langrow" role="group" aria-label="Språk / Language">
         <button class="lang" type="button" data-lang="sv" lang="sv" aria-label="Svenska" aria-pressed="${L === "sv"}">SV</button><span class="langsep" aria-hidden="true">|</span><button class="lang" type="button" data-lang="en" lang="en" aria-label="English" aria-pressed="${L === "en"}">EN</button>
       </div>
@@ -740,6 +741,8 @@ function render() {
   document.getElementById("upload").hidden = !(api && codeOk);
   document.getElementById("imgPrev").hidden = document.getElementById("imgNext").hidden = own.length < 2;
   const nMine = myPhotos().reduce((t, [, l]) => t + l.length, 0);
+  // Hemskärmsappen på iPhone har eget minne och får inte koden från länken: där kan man skriva in den.
+  document.getElementById("haveCode").hidden = !(api && !codeOk && standalone);
   const mineBtn = document.getElementById("mine");
   mineBtn.hidden = !(api && codeOk && nMine);
   mineBtn.textContent = `${T("mine")} (${nMine})`;
@@ -800,6 +803,30 @@ function sheet(html) {
 const closeSheet = () => { const el = document.getElementById("sheet"); if (el) el.remove(); };
 
 // Koden kommer via en delad länk: …/#kod=XXXX (eller ?kod=XXXX). Den kontrolleras, sparas och tas bort ur adressen.
+const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
+
+function askCode() {
+  const el = sheet(`<h2>${T("haveCode")}</h2>
+    <p>${T("codeText")}</p>
+    <form id="codeForm" style="display:grid;gap:12px">
+      <input type="text" id="codeInput" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="${T("code")}" aria-label="${T("code")}" required>
+      <p class="sheet-err" id="codeErr" hidden></p>
+      <div class="sheet-row"><button type="button" class="btn" data-close>${T("cancel")}</button><button class="btn primary">${T("go")}</button></div>
+    </form>`);
+  el.querySelector("#codeInput").focus();
+  el.querySelector("#codeForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const code = el.querySelector("#codeInput").value.trim();
+    const fd = new FormData(); fd.append("code", code);
+    const res = await apiFetch("check", fd).catch(() => null);
+    if (!res || !res.ok) {
+      const err = el.querySelector("#codeErr");
+      err.textContent = res && res.status === 403 ? T("wrongCode") : T("noServer"); err.hidden = false; return;
+    }
+    setCode(code); codeOk = true; closeSheet(); render(); toast(T("codeOkMsg"), 3000);
+  });
+}
+
 async function verifyCode() {
   const m = /[#&?]kod=([^&]+)/.exec(location.hash + location.search);
   if (m) {
@@ -920,6 +947,7 @@ function openMine() {
 
 document.addEventListener("click", async (e) => {
   if (e.target.closest("#mine")) { openMine(); return; }
+  if (e.target.closest("#haveCode")) { askCode(); return; }
   const go = e.target.closest(".mine-go");
   if (go) { closeSheet(); setView(Number(go.dataset.day), true); return; }
   const md = e.target.closest(".mine-del");
