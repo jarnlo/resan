@@ -28,7 +28,8 @@
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
+  /* Exakt en skärm hög, ingen scroll: innehållet ligger i botten. */
+  html, body { height: 100%; overflow: hidden; }
   body {
     margin: 0; background: var(--ground); color: var(--ink);
     font-family: -apple-system, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
@@ -44,7 +45,7 @@
   .shade { background: linear-gradient(rgba(0,0,0,.5), rgba(0,0,0,.08) 24%, rgba(0,0,0,.25) 45%, rgba(0,0,0,.86) 78%); }
 
   main {
-    position: relative; min-height: 100%; display: flex; flex-direction: column;
+    position: relative; height: 100%; height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
     padding-top: max(16px, env(safe-area-inset-top, 0px));
     padding-bottom: max(18px, env(safe-area-inset-bottom, 0px));
     padding-left: max(18px, env(safe-area-inset-left, 0px));
@@ -57,10 +58,11 @@
   .place { font-size: 24px; font-weight: 700; line-height: 1.1; text-align: right; min-width: 0; text-wrap: balance; }
   .ext { font-size: 13px; font-weight: 400; opacity: .55; margin-left: 2px; }
 
-  .panel { margin-top: auto; padding-top: 40vh; }
+  .panel { margin-top: auto; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+  .panel::-webkit-scrollbar { display: none; }
   .viewing { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
              font-size: 13px; color: var(--note); }
-  .back { background: var(--chip); border: 0; color: var(--ink); font: inherit; font-size: 13px;
+  .back { display: inline-flex; align-items: center; gap: 5px; background: var(--chip); border: 0; color: var(--ink); font: inherit; font-size: 13px;
           padding: 5px 12px; border-radius: 14px; text-shadow: none; cursor: pointer; }
   .date { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
   .clockrow { display: flex; justify-content: space-between; align-items: flex-end; margin: 6px 0 12px; }
@@ -85,13 +87,11 @@
   .dot { position: absolute; top: 13px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%;
          background: rgba(255,255,255,.3); pointer-events: none; }
   .dot.past { background: var(--accent-2); }
-  input[type=range] { position: absolute; inset: 0; width: 100%; height: 30px; margin: 0; padding: 0 4px;
-                      -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
-                      background: #fff; border: 0; box-shadow: 0 1px 5px rgba(0,0,0,.5); }
-  input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 0;
-                      box-shadow: 0 1px 5px rgba(0,0,0,.5); }
-  input[type=range]:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; border-radius: 8px; }
+  .thumb { position: absolute; top: 5px; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%;
+           background: #fff; box-shadow: 0 1px 5px rgba(0,0,0,.5); pointer-events: none; transition: transform .15s; }
+  .timeline { cursor: pointer; }
+  .timeline.dragging .thumb { transform: scale(1.2); }
+  .timeline:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 4px; border-radius: 8px; }
   .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; gap: 12px; }
   .thumbdate { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 10px; background: var(--chip); text-shadow: none;
                font-variant-numeric: tabular-nums; }
@@ -103,7 +103,7 @@
   .arrow:focus-visible, .back:focus-visible, a:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
   .credit { font-size: 11px; color: var(--ink-3); margin-top: 12px; min-height: 14px; text-shadow: none; }
   .credit a { text-decoration: underline; text-underline-offset: 2px; }
-  .state { margin-top: auto; padding-top: 50vh; }
+  .state { margin-top: auto; }
   .state h1 { font-size: 34px; }
   @media (prefers-reduced-motion: reduce) { .bgimg { transition: none; } }
 </style>
@@ -416,18 +416,82 @@ function weatherHtml(w, isToday, loc) {
     <div class="wxsub">${label} · ${min}°/${max}°</div></a>`;
 }
 
+// Skalet (huvud, panel, tidslinje) byggs en gång. Tidslinjen byts aldrig ut medan man drar,
+// annars tappar fingret greppet på telefon.
+let shell = false;
+const BACK_ICON = '<svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6.5h7a3.25 3.25 0 0 1 0 6.5H7.5M6.5 3.5l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function buildShell() {
+  app.innerHTML = `
+    <div class="head" id="head"></div>
+    <div class="panel">
+      <div id="content"></div>
+      <div class="scrub">
+        <div class="timeline" id="timeline" role="slider" tabindex="0" aria-label="Välj dag" aria-valuemin="1" aria-valuemax="${TOTAL}">
+          <div class="track"></div>
+          <div class="fill" id="fill"></div>
+          <div id="dots"></div>
+          <div class="thumb" id="thumb"></div>
+        </div>
+        <div class="foot">
+          <span class="thumbdate" id="thumbdate"></span>
+          <span class="arrows">
+            <button class="arrow" id="prev" type="button" aria-label="Föregående dag"><svg width="14" height="14" viewBox="0 0 10 10" aria-hidden="true"><path d="M6.5 1.5 3 5l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="arrow" id="next" type="button" aria-label="Nästa dag"><svg width="14" height="14" viewBox="0 0 10 10" aria-hidden="true"><path d="M3.5 1.5 7 5 3.5 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </span>
+        </div>
+      </div>
+      <div class="credit" id="credit"></div>
+    </div>`;
+  document.getElementById("prev").addEventListener("click", () => setView(currentDay() - 1, true));
+  document.getElementById("next").addEventListener("click", () => setView(currentDay() + 1, true));
+  app.addEventListener("click", (e) => { if (e.target.closest("#back")) setView(clampDay(todayNumber()), true); });
+
+  // Tryck eller dra var som helst på tidslinjen.
+  const tl = document.getElementById("timeline");
+  const dayAt = (x) => {
+    const r = tl.getBoundingClientRect();
+    const f = Math.max(0, Math.min(1, (x - r.left - 10) / (r.width - 20)));
+    return 1 + Math.round(f * (TOTAL - 1));
+  };
+  tl.addEventListener("pointerdown", (e) => {
+    tl.setPointerCapture(e.pointerId);
+    tl.classList.add("dragging");
+    setView(dayAt(e.clientX), false);
+  });
+  tl.addEventListener("pointermove", (e) => {
+    if (!tl.hasPointerCapture(e.pointerId)) return;
+    const d = dayAt(e.clientX);
+    if (d !== currentDay()) setView(d, false);
+  });
+  const release = (e) => {
+    if (!tl.classList.contains("dragging")) return;
+    tl.classList.remove("dragging");
+    loadDay(currentDay());
+  };
+  tl.addEventListener("pointerup", release);
+  tl.addEventListener("pointercancel", release);
+  tl.addEventListener("keydown", (e) => {
+    const k = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+    if (k) { e.preventDefault(); setView(currentDay() + k, true); }
+    if (e.key === "Home") { e.preventDefault(); setView(1, true); }
+    if (e.key === "End") { e.preventDefault(); setView(TOTAL, true); }
+  });
+  shell = true;
+}
+
 function render() {
   const today = todayNumber();
-  if (today < 1 && state.view == null) {
-    app.innerHTML = `<div class="head"><span class="brand">Vietnam – Thailand</span></div>
-      <div class="state"><h1>${1 - today} ${1 - today === 1 ? "dag" : "dagar"} kvar</h1><p class="text">Resan börjar 4 november.</p></div>`;
+  if ((today < 1 || today > TOTAL) && state.view == null) {
+    shell = false;
+    app.innerHTML = today < 1
+      ? `<div class="head"><span class="brand">Vietnam – Thailand</span></div>
+         <div class="state"><h1>${1 - today} ${1 - today === 1 ? "dag" : "dagar"} kvar</h1><p class="text">Resan börjar 4 november.</p></div>`
+      : `<div class="head"><span class="brand">Vietnam – Thailand</span></div>
+         <div class="state"><h1>Hemma igen</h1><p class="text">Resan tog slut 14 december.</p></div>`;
     return;
   }
-  if (today > TOTAL && state.view == null) {
-    app.innerHTML = `<div class="head"><span class="brand">Vietnam – Thailand</span></div>
-      <div class="state"><h1>Hemma igen</h1><p class="text">Resan tog slut 14 december.</p></div>`;
-    return;
-  }
+  if (!shell) buildShell();
   const todayC = clampDay(today);
   const n = currentDay();
   const isToday = n === today;
@@ -440,69 +504,53 @@ function render() {
     const href = `https://www.google.com/maps/dir/?api=1&origin=${LOC[t[3]].join(",")}&destination=${LOC[t[4]].join(",")}${tm ? "&travelmode=" + tm : ""}`;
     return `<a class="trip" href="${href}" target="_blank" rel="noopener">${esc(t[0])} ${esc(t[1])} · <b>ca ${t[2].toLocaleString("sv-SE")} km</b><span class="ext">↗</span></a>`;
   })() : "";
-  const dots = Array.from({ length: TOTAL }, (_, i) => i + 1).filter((k) => k !== n)
-    .map((k) => `<span class="${k <= todayC ? "dot past" : "dot"}" style="left: calc(10px + (100% - 20px) * ${pct(k) / 100})"></span>`).join("");
   const diff = Math.abs(n - today);
   const ut = photo && photo.profile ? "?utm_source=vietnam_thailand&utm_medium=referral" : "";
 
-  app.innerHTML = `
-    <div class="head">
-      <span class="brand"><span class="day">Dag ${n} / ${TOTAL}</span></span>
-      <a class="place" href="https://www.google.com/maps/search/?api=1&query=${LOC[loc].join(",")}" target="_blank" rel="noopener">${esc(place)}<span class="ext">↗</span></a>
+  document.getElementById("head").innerHTML = `
+    <span class="brand"><span class="day">Dag ${n} / ${TOTAL}</span></span>
+    <a class="place" href="https://www.google.com/maps/search/?api=1&query=${LOC[loc].join(",")}" target="_blank" rel="noopener">${esc(place)}<span class="ext">↗</span></a>`;
+  document.getElementById("content").innerHTML = `
+    ${isToday ? "" : `<div class="viewing"><span>${n < today ? "Tillbakablick" : "Framåtblick"} · ${diff} dag${diff === 1 ? "" : "ar"} ${n < today ? "sedan" : "kvar"}</span><button class="back" id="back" type="button">Idag ${BACK_ICON}</button></div>`}
+    <div class="date">${dateStr(n)}</div>
+    <div class="clockrow">
+      <div><div class="clock">${hhmm(miraNow(), true)}</div><div class="clocklabel">lokal tid · Sverige ${sweTime()}</div></div>
+      ${weatherHtml(state.weather[n], isToday, loc)}
     </div>
-    <div class="panel">
-      ${isToday ? "" : `<div class="viewing"><span>${n < today ? "Tillbakablick" : "Framåtblick"} · ${diff} dag${diff === 1 ? "" : "ar"} ${n < today ? "sedan" : "kvar"}</span><button class="back" id="back" type="button">Idag ↩</button></div>`}
-      <div class="date">${dateStr(n)}</div>
-      <div class="clockrow">
-        <div><div class="clock">${hhmm(miraNow(), true)}</div><div class="clocklabel">lokal tid · Sverige ${sweTime()}</div></div>
-        ${weatherHtml(state.weather[n], isToday, loc)}
-      </div>
-      <div class="sep"></div>
-      <h1>${esc(title)}</h1>
-      <p class="text">${esc(text)}</p>
-      ${tripHtml}
-      <div class="scrub">
-        <div class="timeline">
-          <div class="track"></div>
-          <div class="fill" style="width: calc((100% - 20px) * ${pct(todayC) / 100})"></div>
-          ${dots}
-          <input id="day" type="range" min="1" max="${TOTAL}" step="1" value="${n}" aria-label="Välj dag">
-        </div>
-        <div class="foot">
-          <span class="thumbdate">${dateOf(n).getUTCDate()} ${MONTHS[dateOf(n).getUTCMonth()]}</span>
-          <span class="arrows">
-            <button class="arrow" id="prev" type="button" ${n <= 1 ? "disabled" : ""} aria-label="Föregående dag"><svg width="14" height="14" viewBox="0 0 10 10" aria-hidden="true"><path d="M6.5 1.5 3 5l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-            <button class="arrow" id="next" type="button" ${n >= TOTAL ? "disabled" : ""} aria-label="Nästa dag"><svg width="14" height="14" viewBox="0 0 10 10" aria-hidden="true"><path d="M3.5 1.5 7 5 3.5 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          </span>
-        </div>
-      </div>
-      <div class="credit">${photo ? `Foto: <a href="${esc((photo.profile || "https://unsplash.com") + ut)}" target="_blank" rel="noopener">${esc(photo.name)}</a> / <a href="https://unsplash.com/?utm_source=vietnam_thailand&utm_medium=referral" target="_blank" rel="noopener">Unsplash</a>` : ""}</div>
-    </div>`;
+    <div class="sep"></div>
+    <h1>${esc(title)}</h1>
+    <p class="text">${esc(text)}</p>
+    ${tripHtml}`;
+  document.getElementById("credit").innerHTML = photo
+    ? `Foto: <a href="${esc((photo.profile || "https://unsplash.com") + ut)}" target="_blank" rel="noopener">${esc(photo.name)}</a> / <a href="https://unsplash.com/?utm_source=vietnam_thailand&utm_medium=referral" target="_blank" rel="noopener">Unsplash</a>`
+    : "";
 
-  const slider = document.getElementById("day");
-  slider.addEventListener("input", () => setView(Number(slider.value), false));
-  slider.addEventListener("change", () => setView(Number(slider.value), true));
-  const prev = document.getElementById("prev"), next = document.getElementById("next"), back = document.getElementById("back");
-  prev && prev.addEventListener("click", () => setView(n - 1, true));
-  next && next.addEventListener("click", () => setView(n + 1, true));
-  back && back.addEventListener("click", () => setView(todayC, true));
+  // Tidslinjen uppdateras på plats.
+  const at = (k) => `calc(10px + (100% - 20px) * ${pct(k) / 100})`;
+  document.getElementById("fill").style.width = `calc((100% - 20px) * ${pct(todayC) / 100})`;
+  document.getElementById("dots").innerHTML = Array.from({ length: TOTAL }, (_, i) => i + 1).filter((k) => k !== n)
+    .map((k) => `<span class="${k <= todayC ? "dot past" : "dot"}" style="left: ${at(k)}"></span>`).join("");
+  document.getElementById("thumb").style.left = at(n);
+  const tl = document.getElementById("timeline");
+  tl.setAttribute("aria-valuenow", n);
+  tl.setAttribute("aria-valuetext", `Dag ${n}, ${dateStr(n)}, ${place}`);
+  document.getElementById("thumbdate").textContent = `${dateOf(n).getUTCDate()} ${MONTHS[dateOf(n).getUTCMonth()]}`;
+  document.getElementById("prev").disabled = n <= 1;
+  document.getElementById("next").disabled = n >= TOTAL;
 }
 
-// Behåll fokus på reglaget medan man drar (render byter ut DOM:en).
 function setView(m, load) {
   m = clampDay(m);
-  const focusSlider = document.activeElement && document.activeElement.id === "day";
   state.view = m === clampDay(todayNumber()) ? null : m;
   state.viewAt = Date.now();
   render();
-  if (focusSlider) { const s = document.getElementById("day"); s && s.focus(); }
   if (load) loadDay(m);
 }
 
 // Svep åt sidan för att byta dag (inte på reglaget).
 let sx = null, sy = null;
 document.addEventListener("touchstart", (e) => {
-  if (e.target.closest("input, a, button")) { sx = null; return; }
+  if (e.target.closest("#timeline, a, button")) { sx = null; return; }
   sx = e.touches[0].clientX; sy = e.touches[0].clientY;
 }, { passive: true });
 document.addEventListener("touchend", (e) => {
@@ -512,7 +560,7 @@ document.addEventListener("touchend", (e) => {
   if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) setView(currentDay() + (dx < 0 ? 1 : -1), true);
 }, { passive: true });
 document.addEventListener("keydown", (e) => {
-  if (e.target.closest && e.target.closest("input")) return;
+  if (e.target.closest && e.target.closest("#timeline")) return;
   if (e.key === "ArrowRight") setView(currentDay() + 1, true);
   if (e.key === "ArrowLeft") setView(currentDay() - 1, true);
 });
@@ -520,8 +568,8 @@ document.addEventListener("keydown", (e) => {
 // Varje halvminut: klocka, snäpp tillbaka till idag efter 2 min, ny bild när det är dags.
 function tick() {
   if (state.view != null && Date.now() - state.viewAt > SNAP_BACK_MS) state.view = null;
-  const s = document.getElementById("day");
-  if (!(s && document.activeElement === s)) render();
+  const tl = document.getElementById("timeline");
+  if (!(tl && tl.classList.contains("dragging"))) render();
   loadDay(currentDay());
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) tick(); });
