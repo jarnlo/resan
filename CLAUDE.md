@@ -22,8 +22,8 @@ Inbäddad (`embedded`) skickar sidan `postMessage({resanOpen: url})` för länka
 - Inte som claude.ai-artifact: dess CSP blockerar fetch och bilder från andra värdar.
 
 ## Funktioner
-- Topp: pilar + Idag (36 px), tidslinjen (egen pekarstyrd, byts aldrig ut under drag), platta med ort (krymper till en rad, max 28 px)
-  + "Dag X / 41". Resdagar: "· färdsätt · ca N km" i dagraden och ortnamnet öppnar rutten i Google Maps; annars kartan för orten.
+- Topp: pilar + Idag (36 px) och tidslinjen (egen pekarstyrd, byts aldrig ut under drag). Ort (15 px, krymper till en rad) + "Dag X / 41"
+  står som liten rad direkt ovanför programrubriken. Resdagar: "· färdsätt · ca N km" i dagraden och ortnamnet öppnar rutten i Google Maps; annars kartan för orten.
 - Fotokredit uppe till höger ("Photo credit: X / Unsplash" – krav från Unsplash, får inte tas bort). Egna foton visar uppladdarens namn där.
 - Datum, Framåt/Tillbakablick, två små klockor (Vietnam dag 1–20 / Thailand från dag 21, båda UTC+7, och Sverige), väder (klick → yr.no).
 - Bild: Unsplash (nyckel delad med widgeten, 50 sökningar/h totalt!), kvällsfilter (`fitsTod`) bara för idag, byts var 10:e min med övertoning.

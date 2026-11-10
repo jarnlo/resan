@@ -55,14 +55,12 @@
     max-width: 560px; margin: 0 auto;
   }
   .head { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
-  /* Platta bakom ort + dag så att texten syns mot ljus himmel. Negativ marginal = texten står kvar i vänsterkanten. */
-  .where { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0;
-           max-width: calc(100% + 20px); margin-left: -10px; padding: 7px 10px 8px; border-radius: 12px;
-           background: rgba(20,17,15,.22); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
-  .where .day { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: var(--ink); }
+  /* Ort + dag som liten rad ovanför programrubriken. */
+  .where { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; max-width: 100%; margin-bottom: 8px; }
+  .where .day { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: var(--ink-2); }
   .brand { font-size: 12px; text-transform: uppercase; letter-spacing: .16em; font-weight: 800; white-space: nowrap; padding-top: 6px; }
   .brand .day { color: var(--accent); letter-spacing: .08em; }
-  .place { display: block; max-width: 100%; font-size: 28px; font-weight: 700; line-height: 1.05; letter-spacing: -.01em; white-space: nowrap; }
+  .place { display: block; max-width: 100%; font-size: 15px; font-weight: 600; line-height: 1.05; letter-spacing: -.01em; white-space: nowrap; }
   .ext { font-size: .7em; font-weight: 400; opacity: .55; margin-left: .35em; vertical-align: .15em; }
 
   .panel { margin-top: auto; min-height: 0; overflow-y: auto; scrollbar-width: none; }
@@ -614,7 +612,6 @@ function buildShell() {
           <div class="thumb" id="thumb"></div>
         </div>
       </div>
-      <div class="where" id="where"></div>
     </div>
     <div class="panel">
       <div id="content"></div>
@@ -701,9 +698,9 @@ function render() {
   const diff = Math.abs(n - today);
   const ut = photo && photo.profile ? "?utm_source=vietnam_thailand&utm_medium=referral" : "";
 
-  document.getElementById("where").innerHTML = `
+  const whereHtml = `<div class="where" id="where">
     <a class="place" href="${placeHref}" target="_blank" rel="noopener"${t ? ` aria-label="${esc(T("tripAria", modeName(t[0]), t[1], t[2]))}"` : ""}>${esc(place)}<span class="ext">↗</span></a>
-    <span class="day">${T("day")} ${n} / ${TOTAL}${tripLine}</span>`;
+    <span class="day">${T("day")} ${n} / ${TOTAL}${tripLine}</span></div>`;
   document.getElementById("content").innerHTML = `
     <div class="date">${dateStr(n)}</div>
     ${isToday ? "" : `<div class="viewing"><span>${n < today ? T("back", diff) : T("ahead", diff)}</span></div>`}
@@ -715,6 +712,7 @@ function render() {
       ${weatherHtml(state.weather[n], isToday, loc)}
     </div>
     <div class="sep"></div>
+    ${whereHtml}
     <h1>${esc(title)}</h1>
     <p class="text">${esc(text)}</p>
     `;
@@ -1006,16 +1004,16 @@ document.addEventListener("change", (e) => {
   if (files.length) uploadFiles(files);
 });
 
-// Ortnamnet ska alltid rymmas på en rad: krymp från 28 px tills det får plats.
+// Ortnamnet ska alltid rymmas på en rad: krymp från 15 px tills det får plats.
 function fitPlace() {
   const el = document.querySelector(".where .place");
   const box = document.getElementById("where");
   if (!el || !box) return;
   const max = app.clientWidth - parseFloat(getComputedStyle(app).paddingLeft) - parseFloat(getComputedStyle(app).paddingRight);
   // (plattan sticker ut 10 px till vänster och har 10 px padding på var sida → samma textbredd som sidan)
-  let size = 28;
+  let size = 15;
   el.style.fontSize = size + "px";
-  while (el.scrollWidth > max && size > 16) { size -= 1; el.style.fontSize = size + "px"; }
+  while (el.scrollWidth > max && size > 11) { size -= 1; el.style.fontSize = size + "px"; }
 }
 addEventListener("resize", fitPlace);
 
