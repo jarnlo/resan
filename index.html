@@ -115,10 +115,10 @@
             right: max(18px, env(safe-area-inset-right, 0px)); max-width: calc(100vw - 270px); text-align: right;
             font-size: 9px; line-height: 1.35; color: rgba(255,255,255,.32); text-shadow: none; letter-spacing: .02em; }
   .credit a { text-decoration: none; }
-  .credit .own { display: inline-flex; gap: 6px; }
-  .credit button { border: 0; background: var(--glass); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600;
-                   padding: 5px 10px; border-radius: 9px; cursor: pointer; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-  .credit.has-own { top: max(16px, env(safe-area-inset-top, 0px)); max-width: none; }
+  /* Egna foton: samma diskreta kredit, namnet och "Ta bort" går att trycka på. */
+  .credit button { border: 0; background: none; padding: 4px 0; margin: -4px 0; color: inherit; font: inherit; cursor: pointer; }
+  .credit button:hover, .credit button:focus-visible { color: var(--ink); }
+  .credit .del { text-decoration: underline; text-underline-offset: 2px; }
   .sheet { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center;
            background: rgba(0,0,0,.55); padding: 16px; padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
   .sheet-box { width: 100%; max-width: 420px; background: #1f1b18; border-radius: 18px; padding: 20px; display: grid; gap: 12px; text-shadow: none; }
@@ -292,7 +292,7 @@ const MODE_EN = { "Buss": "Bus", "Nattåg": "Night train", "Motorcykel": "Motorb
 const WX_EN = { "Klart": "Clear", "Lätt molnigt": "Partly cloudy", "Mulet": "Overcast", "Dimma": "Fog", "Duggregn": "Drizzle", "Regn": "Rain", "Snö": "Snow", "Regnskurar": "Showers", "Åska": "Thunderstorm" };
 const STR = {
   sv: {
-    day: "Dag", today: "Idag", sweden: "Sverige", approx: "ca", photo: "Photo credit", ownPhoto: "Egen bild", del: "Ta bort",
+    day: "Dag", today: "Idag", sweden: "Sverige", approx: "ca", photo: "Photo credit", ownPhoto: "Egen bild", del: "Ta bort foto",
     loadingWx: "Hämtar väder…", noWx: "Ingen prognos än", prev: "Föregående dag", next: "Nästa dag", add: "Lägg till bilder för den här dagen",
     pick: "Välj dag", nextPhoto: "Nästa bild",
     back: (d) => `Tillbakablick · ${d} dag${d === 1 ? "" : "ar"} sedan`, ahead: (d) => `Framåtblick · ${d} dag${d === 1 ? "" : "ar"} kvar`,
@@ -308,7 +308,7 @@ const STR = {
     delWrong: "Fel kod. Tryck på + och skriv in den igen.", delNotYours: "Du kan bara ta bort dina egna bilder.", delFail: "Kunde inte ta bort bilden.", delDone: "Bilden är borttagen.",
   },
   en: {
-    day: "Day", today: "Today", sweden: "Sweden", approx: "about", photo: "Photo credit", ownPhoto: "Own photo", del: "Delete",
+    day: "Day", today: "Today", sweden: "Sweden", approx: "about", photo: "Photo credit", ownPhoto: "Own photo", del: "Delete photo",
     loadingWx: "Loading weather…", noWx: "No forecast yet", prev: "Previous day", next: "Next day", add: "Add photos to this day",
     pick: "Choose day", nextPhoto: "Next photo",
     back: (d) => `Looking back · ${d} day${d === 1 ? "" : "s"} ago`, ahead: (d) => `Looking ahead · ${d} day${d === 1 ? "" : "s"} to go`,
@@ -680,9 +680,8 @@ function render() {
     <p class="text">${esc(text)}</p>
     `;
   const credit = document.getElementById("credit");
-  credit.classList.toggle("has-own", own.length > 0);
   credit.innerHTML = own.length
-    ? `<span class="own"><button type="button" id="ownNext" aria-label="${T("nextPhoto")}">${esc(own[ownI].by || T("ownPhoto"))}${own.length > 1 ? ` · ${ownI + 1}/${own.length}` : ""}</button>${own[ownI].mine ? `<button type="button" id="ownDel" data-file="${esc(own[ownI].file)}">${T("del")}</button>` : ""}</span>`
+    ? `<button type="button" id="ownNext" aria-label="${T("nextPhoto")}">${T("photo")}: ${esc(own[ownI].by || T("ownPhoto"))}${own.length > 1 ? ` · ${ownI + 1}/${own.length}` : ""}</button>${own[ownI].mine ? `<br><button type="button" class="del" id="ownDel" data-file="${esc(own[ownI].file)}">${T("del")}</button>` : ""}`
     : photo
     ? `${T("photo")}: <a href="${esc((photo.profile || "https://unsplash.com") + ut)}" target="_blank" rel="noopener">${esc(photo.name)}</a> / <a href="https://unsplash.com/?utm_source=vietnam_thailand&utm_medium=referral" target="_blank" rel="noopener">Unsplash</a>`
     : "";
