@@ -69,8 +69,8 @@
   [hidden] { display: none !important; }
   .date { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
   .clockrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin: 6px 0 12px; }
-  .clocks { display: flex; gap: 14px; }
-  .clock { font-size: 26px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+  .clocks { display: flex; gap: 18px; }
+  .clock { font-size: 20px; font-weight: 400; line-height: 1; font-variant-numeric: tabular-nums; }
   .clocklabel { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-2); margin-bottom: 4px; }
   .wx { text-align: right; display: block; }
   .wxicon { width: 28px; height: 28px; vertical-align: -5px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
@@ -84,7 +84,7 @@
   .trip { flex-wrap: wrap; row-gap: 2px; }
   .trip b { color: var(--ink); font-weight: 600; white-space: nowrap; }
 
-  .scrub { margin-top: 28px; }
+  .scrub { width: 100%; margin: -6px 0 -4px; }
   .timeline { position: relative; height: 30px; touch-action: none; }
   .track, .fill { position: absolute; left: 10px; top: 14px; height: 2px; border-radius: 1px; }
   .track { right: 10px; background: rgba(255,255,255,.2); }
@@ -442,10 +442,6 @@ function buildShell() {
             <button class="arrow" id="next" type="button" aria-label="Nästa dag"><svg width="14" height="14" viewBox="0 0 10 10" aria-hidden="true"><path d="M3.5 1.5 7 5 3.5 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <button class="back" id="back" type="button" hidden>Idag ${BACK_ICON}</button>
       </span>
-      <div class="where" id="where"></div>
-    </div>
-    <div class="panel">
-      <div id="content"></div>
       <div class="scrub">
         <div class="timeline" id="timeline" role="slider" tabindex="0" aria-label="Välj dag" aria-valuemin="1" aria-valuemax="${TOTAL}">
           <div class="track"></div>
@@ -454,6 +450,10 @@ function buildShell() {
           <div class="thumb" id="thumb"></div>
         </div>
       </div>
+      <div class="where" id="where"></div>
+    </div>
+    <div class="panel">
+      <div id="content"></div>
       <div class="credit" id="credit"></div>
     </div>`;
   document.getElementById("prev").addEventListener("click", () => setView(currentDay() - 1, true));
