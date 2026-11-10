@@ -66,7 +66,7 @@
 
   .panel { margin-top: auto; min-height: 0; overflow-y: auto; scrollbar-width: none; }
   .panel::-webkit-scrollbar { display: none; }
-  .viewing { margin-bottom: 10px; font-size: 13px; color: var(--note); }
+  .viewing { margin-top: 3px; font-size: 13px; color: var(--note); }
   .back { display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 12px; border: 0; border-radius: 10px;
           background: var(--glass); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; text-shadow: none; cursor: pointer; }
   [hidden] { display: none !important; }
@@ -77,8 +77,8 @@
   .lang { border: 0; background: none; padding: 6px 0; color: var(--ink-3); font: inherit; cursor: pointer; }
   .lang[aria-pressed="true"] { color: var(--ink); font-weight: 600; cursor: default; }
   .langsep { color: var(--ink-3); opacity: .6; }
-  .date { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
-  .clockrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin: 6px 0 12px; }
+  .date { font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--ink); }
+  .clockrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin: 14px 0 12px; min-height: 58px; }
   .clocks { display: flex; gap: 18px; }
   .clock { font-size: 20px; font-weight: 400; line-height: 1; font-variant-numeric: tabular-nums; }
   .clocklabel { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-2); margin-bottom: 4px; }
@@ -666,8 +666,8 @@ function render() {
     <a class="place" href="${placeHref}" target="_blank" rel="noopener"${t ? ` aria-label="${esc(T("tripAria", modeName(t[0]), t[1], t[2]))}"` : ""}>${esc(place)}<span class="ext">↗</span></a>
     <span class="day">${T("day")} ${n} / ${TOTAL}${tripLine}</span>`;
   document.getElementById("content").innerHTML = `
-    ${isToday ? "" : `<div class="viewing"><span>${n < today ? T("back", diff) : T("ahead", diff)}</span></div>`}
     <div class="date">${dateStr(n)}</div>
+    ${isToday ? "" : `<div class="viewing"><span>${n < today ? T("back", diff) : T("ahead", diff)}</span></div>`}
     <div class="clockrow">
       <div class="clocks">
         <div><div class="clocklabel">${country(n)}</div><div class="clock">${hhmm(miraNow(), true)}</div></div>
