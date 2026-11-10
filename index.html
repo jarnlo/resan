@@ -55,13 +55,13 @@
   }
   .head { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
   /* Platta bakom ort + dag så att texten syns mot ljus himmel. Negativ marginal = texten står kvar i vänsterkanten. */
-  .where { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0;
-           max-width: calc(100% + 24px); margin-left: -12px; padding: 10px 12px 11px; border-radius: 14px;
-           background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
-  .where .day { font-size: 14px; text-transform: uppercase; letter-spacing: .14em; font-weight: 800; color: var(--ink); }
+  .where { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0;
+           max-width: calc(100% + 20px); margin-left: -10px; padding: 7px 10px 8px; border-radius: 12px;
+           background: rgba(20,17,15,.22); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .where .day { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: var(--ink); }
   .brand { font-size: 12px; text-transform: uppercase; letter-spacing: .16em; font-weight: 800; white-space: nowrap; padding-top: 6px; }
   .brand .day { color: var(--accent); letter-spacing: .08em; }
-  .place { display: block; max-width: 100%; font-size: 36px; font-weight: 700; line-height: 1.05; letter-spacing: -.01em; white-space: nowrap; }
+  .place { display: block; max-width: 100%; font-size: 28px; font-weight: 700; line-height: 1.05; letter-spacing: -.01em; white-space: nowrap; }
   .ext { font-size: .7em; font-weight: 400; opacity: .55; margin-left: .35em; vertical-align: .15em; }
 
   .panel { margin-top: auto; min-height: 0; overflow-y: auto; scrollbar-width: none; }
@@ -70,7 +70,7 @@
   .back { display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 12px; border: 0; border-radius: 10px;
           background: var(--glass); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; text-shadow: none; cursor: pointer; }
   [hidden] { display: none !important; }
-  .footrow { margin-top: 14px; display: flex; align-items: center; gap: 12px; }
+  .footrow { margin-top: 26px; display: flex; align-items: center; gap: 12px; }
   .upload { border: 0; font: inherit; font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 10px; cursor: pointer;
             background: var(--glass); color: var(--ink); text-shadow: none; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
   .langrow { margin-left: auto; display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-size: 12px; text-shadow: none; }
@@ -870,14 +870,14 @@ document.addEventListener("change", (e) => {
   if (files.length) uploadFiles(files);
 });
 
-// Ortnamnet ska alltid rymmas på en rad: krymp från 36 px tills det får plats.
+// Ortnamnet ska alltid rymmas på en rad: krymp från 28 px tills det får plats.
 function fitPlace() {
   const el = document.querySelector(".where .place");
   const box = document.getElementById("where");
   if (!el || !box) return;
   const max = app.clientWidth - parseFloat(getComputedStyle(app).paddingLeft) - parseFloat(getComputedStyle(app).paddingRight);
-  // (plattan sticker ut 12 px till vänster och har 12 px padding på var sida → samma textbredd som sidan)
-  let size = 36;
+  // (plattan sticker ut 10 px till vänster och har 10 px padding på var sida → samma textbredd som sidan)
+  let size = 28;
   el.style.fontSize = size + "px";
   while (el.scrollWidth > max && size > 16) { size -= 1; el.style.fontSize = size + "px"; }
 }
