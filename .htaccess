@@ -5,4 +5,8 @@
 RedirectMatch 404 /\.git
 <IfModule mod_headers.c>
   Header set X-Robots-Tag "noindex, nofollow"
+  # Sidan ska alltid kontrolleras mot servern, så att en ny version syns direkt (i telefonen och i Mac-widgeten).
+  <FilesMatch "\.(html|json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
 </IfModule>
