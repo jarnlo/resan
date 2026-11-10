@@ -104,8 +104,9 @@
   .arrow:active { transform: scale(.94); }
   .arrow:disabled { opacity: .35; }
   .arrow:focus-visible, .back:focus-visible, a:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
-  .credit { font-size: 11px; color: var(--ink-3); margin-top: 12px; min-height: 14px; text-shadow: none; }
-  .credit a { text-decoration: underline; text-underline-offset: 2px; }
+  /* Unsplash kräver kreditering; hålls så diskret som möjligt. */
+  .credit { font-size: 9px; color: rgba(255,255,255,.28); margin-top: 10px; min-height: 11px; text-shadow: none; letter-spacing: .02em; }
+  .credit a { text-decoration: none; }
   .state { margin-top: auto; }
   .state h1 { font-size: 34px; }
   @media (prefers-reduced-motion: reduce) { .bgimg { transition: none; } }
